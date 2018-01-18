@@ -33,3 +33,6 @@ mod tests;
 
 mod errors;
 pub use errors::*;
+
+mod pixel_format;
+pub use pixel_format::{PixelFormat, PixelFormatFlags, FourCC};
