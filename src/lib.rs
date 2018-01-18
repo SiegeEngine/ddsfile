@@ -20,5 +20,13 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#[macro_use]
+extern crate bitflags;
+extern crate byteorder;
+#[macro_use]
+extern crate enum_primitive;
+#[macro_use]
+extern crate error_chain;
+
 #[cfg(test)]
 mod tests;

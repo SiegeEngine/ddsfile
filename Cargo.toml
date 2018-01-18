@@ -10,3 +10,7 @@ keywords = [ "dds" ]
 readme = "README.md"
 
 [dependencies]
+bitflags = "1.0"
+byteorder = "1.2"
+enum_primitive = "0.1"
+error-chain = "0.11"
