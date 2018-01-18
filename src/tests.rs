@@ -20,5 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#[cfg(test)]
-mod tests;
+#[test]
+fn it_works() {
+    assert_eq!(2 + 2, 4);
+}
