@@ -2,5 +2,11 @@
 name = "ddsfile"
 version = "0.1.0"
 authors = ["Mike Dilger <mike@optcomp.nz>"]
+description = "DirectDraw Surface file format parser/composer"
+repository = "https://github.com/mikedilger/ddsfile"
+documentation = "https://docs.rs/ddsfile"
+license = "MIT"
+keywords = [ "dds" ]
+readme = "README.md"
 
 [dependencies]
