@@ -20,16 +20,33 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#[macro_use]
-extern crate bitflags;
-extern crate byteorder;
-#[macro_use]
-extern crate enum_primitive;
-#[macro_use]
-extern crate error_chain;
+error_chain! {
+    types {
+        Error, ErrorKind, ResultExt, Result;
+    }
 
-#[cfg(test)]
-mod tests;
+    links {
+    }
 
-mod errors;
-pub use errors::*;
+    foreign_links {
+        Fmt(::std::fmt::Error);
+        Io(::std::io::Error);
+    }
+
+    errors {
+        General(s: String) {
+            description("General Error"),
+            display("General Error: '{}'", s),
+        }
+        BadMagicNumber {
+            description("Bad Magic Number"),
+        }
+        InvalidField(s: String) {
+            description("Invalid field"),
+            display("Invalid Field: '{}'", s),
+        }
+        ShortFile {
+            description("File is cut short"),
+        }
+    }
+}
