@@ -27,11 +27,12 @@ use pixel_format::PixelFormat;
 
 #[derive(Debug, Clone)]
 pub struct Header {
-    /// Size of this structure in bytes; set to 124
-    pub size: u32,
+    // Size of this structure in bytes; set to 124
+    // technically not required, we could take this out
+    size: u32,
 
-    /// Flags indicating which members contain valid data
-    pub flags: HeaderFlags,
+    // Flags indicating which members contain valid data
+    flags: HeaderFlags,
 
     /// Surface height (in pixels)
     pub height: u32,
@@ -41,16 +42,17 @@ pub struct Header {
 
     /// The pitch or number of bytes per scan line in an uncompressed texture;
     /// The total number of bytes in a top level texture for a compressed texture
-    pub pitch_or_linear_size: u32,
+    pub pitch_or_linear_size: Option<u32>,
 
     /// Depth of a volume texture (in pixels)
-    pub depth: u32,
+    pub depth: Option<u32>,
 
     /// Number of mipmap levels
-    pub mip_map_count: u32,
+    pub mip_map_count: Option<u32>,
 
-    /// Unused
-    pub reserved1: [u32; 11],
+    // Unused (reserved)
+    // technically not required, but we write back what we read
+    reserved1: [u32; 11],
 
     /// The pixel format
     pub spf: PixelFormat,
@@ -61,14 +63,17 @@ pub struct Header {
     /// Additional detail about the surfaces stored
     pub caps2: Caps2,
 
-    /// Unused
-    pub caps3: u32,
+    // Unused
+    // technically not required, but we write back what we read
+    caps3: u32,
 
-    /// Unused
-    pub caps4: u32,
+    // Unused
+    // technically not required, but we write back what we read
+    caps4: u32,
 
-    /// Unused
-    pub reserved2: u32,
+    // Unused
+    // technically not required, but we write back what we read
+    reserved2: u32,
 }
 
 impl Header {
@@ -78,7 +83,9 @@ impl Header {
         if size != 124 {
             return Err(ErrorKind::InvalidField("Header struct size".to_owned()).into());
         }
-        let flags = r.read_u32::<LittleEndian>()?;
+        let flags = HeaderFlags::from_bits_truncate(
+            r.read_u32::<LittleEndian>()?
+        );
         let height = r.read_u32::<LittleEndian>()?;
         let width = r.read_u32::<LittleEndian>()?;
         let pitch_or_linear_size = r.read_u32::<LittleEndian>()?;
@@ -94,12 +101,26 @@ impl Header {
         let reserved2 = r.read_u32::<LittleEndian>()?;
         Ok(Header {
             size: size,
-            flags: HeaderFlags::from_bits_truncate(flags),
+            flags: flags,
             height: height,
             width: width,
-            pitch_or_linear_size: pitch_or_linear_size,
-            depth: depth,
-            mip_map_count: mip_map_count,
+            pitch_or_linear_size: if flags.contains(HeaderFlags::PITCH)
+                || flags.contains(HeaderFlags::LINEARSIZE)
+            {
+                Some(pitch_or_linear_size)
+            } else {
+                None
+            },
+            depth: if flags.contains(HeaderFlags::DEPTH) {
+                Some(depth)
+            } else {
+                None
+            },
+            mip_map_count: if flags.contains(HeaderFlags::MIPMAPCOUNT) {
+                Some(mip_map_count)
+            } else {
+                None
+            },
             reserved1: reserved1,
             spf: spf,
             caps: Caps::from_bits_truncate(caps),
@@ -116,9 +137,9 @@ impl Header {
         w.write_u32::<LittleEndian>(self.flags.bits())?;
         w.write_u32::<LittleEndian>(self.height)?;
         w.write_u32::<LittleEndian>(self.width)?;
-        w.write_u32::<LittleEndian>(self.pitch_or_linear_size)?;
-        w.write_u32::<LittleEndian>(self.depth)?;
-        w.write_u32::<LittleEndian>(self.mip_map_count)?;
+        w.write_u32::<LittleEndian>(self.pitch_or_linear_size.unwrap_or(0))?;
+        w.write_u32::<LittleEndian>(self.depth.unwrap_or(0))?;
+        w.write_u32::<LittleEndian>(self.mip_map_count.unwrap_or(0))?;
         for u in &self.reserved1 {
             w.write_u32::<LittleEndian>(*u)?;
         }
@@ -146,7 +167,7 @@ bitflags! {
         const PIXELFORMAT = 0x1000;
         /// Required in a mipmapped texture
         const MIPMAPCOUNT = 0x20000;
-        /// Required with pitch is provided for a compressed texture
+        /// Required when pitch is provided for a compressed texture
         const LINEARSIZE = 0x80000;
         /// Required in a depth texture
         const DEPTH = 0x800000;
@@ -172,15 +193,15 @@ bitflags! {
         /// Required when these surfaces are stored in a cubemap
         const CUBEMAP_POSITIVEX = 0x400;
         /// Required when these surfaces are stored in a cubemap
-        const CUBEMAP_NEGATIVEX = 0x400;
+        const CUBEMAP_NEGATIVEX = 0x800;
         /// Required when these surfaces are stored in a cubemap
-        const CUBEMAP_POSITIVEY = 0x400;
+        const CUBEMAP_POSITIVEY = 0x1000;
         /// Required when these surfaces are stored in a cubemap
-        const CUBEMAP_NEGATIVEY = 0x400;
+        const CUBEMAP_NEGATIVEY = 0x2000;
         /// Required when these surfaces are stored in a cubemap
-        const CUBEMAP_POSITIVEZ = 0x400;
+        const CUBEMAP_POSITIVEZ = 0x4000;
         /// Required when these surfaces are stored in a cubemap
-        const CUBEMAP_NEGATIVEZ = 0x400;
+        const CUBEMAP_NEGATIVEZ = 0x8000;
         /// Required for a volume texture
         const VOLUME = 0x200000;
     }
