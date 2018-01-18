@@ -36,3 +36,6 @@ pub use errors::*;
 
 mod pixel_format;
 pub use pixel_format::{PixelFormat, PixelFormatFlags, FourCC};
+
+mod header;
+pub use header::{Header, HeaderFlags, Caps, Caps2};
