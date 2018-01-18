@@ -39,3 +39,6 @@ pub use pixel_format::{PixelFormat, PixelFormatFlags, FourCC};
 
 mod header;
 pub use header::{Header, HeaderFlags, Caps, Caps2};
+
+mod header10;
+pub use header10::{Header10, DxgiFormat, D3D10ResourceDimension};
