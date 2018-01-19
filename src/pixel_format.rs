@@ -33,27 +33,27 @@ pub struct PixelFormat {
     pub flags: PixelFormatFlags,
 
     /// Codes for specifying compressed or custom formats.
-    pub fourcc: FourCC,
+    pub fourcc: Option<FourCC>,
 
     /// Number of bits in an RGB (possibly including alpha) format. Valid when
     /// flags includes RGB or LUMINANCE.
-    pub rgb_bit_count: u32,
+    pub rgb_bit_count: Option<u32>,
 
     /// Red (or Y) mask for reading color data. For instance, given the A8R8G8B8 format,
     /// the red mask would be 0x00ff0000.
-    pub r_bit_mask: u32,
+    pub r_bit_mask: Option<u32>,
 
     /// Green (or U) mask for reading color data. For instance, given the A8R8G8B8 format,
     /// the green mask would be 0x0000ff00.
-    pub g_bit_mask: u32,
+    pub g_bit_mask: Option<u32>,
 
     /// Blue (or V) mask for reading color data. For instance, given the A8R8G8B8 format,
     /// the blue mask would be 0x000000ff
-    pub b_bit_mask: u32,
+    pub b_bit_mask: Option<u32>,
 
     /// Alpha mask for reading alpha data. Valid of flags includes ALPHA_PIXELS or ALPHA.
     /// For instance, given the A8R8G8B8 format, the alpha mask would be 0xff000000
-    pub a_bit_mask: u32,
+    pub a_bit_mask: Option<u32>,
 }
 
 impl PixelFormat {
@@ -63,7 +63,9 @@ impl PixelFormat {
         if size != 32 {
             return Err(ErrorKind::InvalidField("Pixel format struct size".to_owned()).into());
         }
-        let flags = r.read_u32::<LittleEndian>()?;
+        let flags = PixelFormatFlags::from_bits_truncate(
+            r.read_u32::<LittleEndian>()?
+        );
         let fourcc = r.read_u32::<LittleEndian>()?;
         let rgb_bit_count = r.read_u32::<LittleEndian>()?;
         let r_bit_mask = r.read_u32::<LittleEndian>()?;
@@ -72,13 +74,41 @@ impl PixelFormat {
         let a_bit_mask = r.read_u32::<LittleEndian>()?;
         Ok(PixelFormat {
             size: size,
-            flags: PixelFormatFlags::from_bits_truncate(flags),
-            fourcc: FourCC(fourcc),
-            rgb_bit_count: rgb_bit_count,
-            r_bit_mask: r_bit_mask,
-            g_bit_mask: g_bit_mask,
-            b_bit_mask: b_bit_mask,
-            a_bit_mask: a_bit_mask,
+            flags: flags,
+            fourcc: if flags.contains(PixelFormatFlags::FOURCC) {
+                Some(FourCC(fourcc))
+            } else {
+                None
+            },
+            rgb_bit_count: if flags.contains(PixelFormatFlags::RGB)
+                || flags.contains(PixelFormatFlags::LUMINANCE)
+            {
+                Some(rgb_bit_count)
+            } else {
+                None
+            },
+            r_bit_mask: if flags.contains(PixelFormatFlags::RGB) {
+                Some(r_bit_mask)
+            } else {
+                None
+            },
+            g_bit_mask: if flags.contains(PixelFormatFlags::RGB) {
+                Some(g_bit_mask)
+            } else {
+                None
+            },
+            b_bit_mask: if flags.contains(PixelFormatFlags::RGB) {
+                Some(b_bit_mask)
+            } else {
+                None
+            },
+            a_bit_mask: if flags.contains(PixelFormatFlags::ALPHA_PIXELS)
+                || flags.contains(PixelFormatFlags::ALPHA)
+            {
+                Some(a_bit_mask)
+            } else {
+                None
+            }
         })
     }
 
@@ -86,12 +116,12 @@ impl PixelFormat {
     {
         w.write_u32::<LittleEndian>(self.size)?;
         w.write_u32::<LittleEndian>(self.flags.bits())?;
-        w.write_u32::<LittleEndian>(self.fourcc.0)?;
-        w.write_u32::<LittleEndian>(self.rgb_bit_count)?;
-        w.write_u32::<LittleEndian>(self.r_bit_mask)?;
-        w.write_u32::<LittleEndian>(self.g_bit_mask)?;
-        w.write_u32::<LittleEndian>(self.b_bit_mask)?;
-        w.write_u32::<LittleEndian>(self.a_bit_mask)?;
+        w.write_u32::<LittleEndian>(self.fourcc.as_ref().unwrap_or(&FourCC(0)).0)?;
+        w.write_u32::<LittleEndian>(self.rgb_bit_count.unwrap_or(0))?;
+        w.write_u32::<LittleEndian>(self.r_bit_mask.unwrap_or(0))?;
+        w.write_u32::<LittleEndian>(self.g_bit_mask.unwrap_or(0))?;
+        w.write_u32::<LittleEndian>(self.b_bit_mask.unwrap_or(0))?;
+        w.write_u32::<LittleEndian>(self.a_bit_mask.unwrap_or(0))?;
         Ok(())
     }
 }

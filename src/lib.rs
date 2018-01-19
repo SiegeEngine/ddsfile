@@ -73,7 +73,7 @@ impl Dds {
 
         let header = Header::read(r)?;
 
-        let header10 = if header.spf.fourcc == FourCC(<FourCC>::DX10) {
+        let header10 = if header.spf.fourcc == Some(FourCC(<FourCC>::DX10)) {
             Some(Header10::read(r)?)
         } else {
             None
