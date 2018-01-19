@@ -77,6 +77,26 @@ pub struct Header {
 }
 
 impl Header {
+    pub fn new(height: u32, width: u32, pixel_format: PixelFormat) -> Header {
+        Header {
+            size: 124,
+            flags: HeaderFlags::CAPS | HeaderFlags::HEIGHT | HeaderFlags::WIDTH
+                | HeaderFlags::PIXELFORMAT,
+            height: height,
+            width: width,
+            pitch_or_linear_size: None,
+            depth: None,
+            mip_map_count: None,
+            reserved1: [0; 11],
+            spf: pixel_format,
+            caps: Caps::TEXTURE,
+            caps2: Caps2::empty(),
+            caps3: 0,
+            caps4: 0,
+            reserved2: 0,
+        }
+    }
+
     pub fn read<R: Read>(r: &mut R) -> Result<Header>
     {
         let size = r.read_u32::<LittleEndian>()?;
