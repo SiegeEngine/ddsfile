@@ -147,6 +147,8 @@ bitflags! {
 pub struct FourCC(pub u32);
 
 // generate little-endian u32 from 4 bytes
+// rust is not ready for this yet
+/*
 macro_rules! u32_code {
     ($w:expr) => {
         ((($w[0] as u32) <<  0) |
@@ -156,18 +158,19 @@ macro_rules! u32_code {
          ((*$w as [u8; 4])[0] as u32 * 0))
     }
 }
+ */
 
 impl FourCC {
     pub const NONE: u32 = 0;
 
     // D3D formats
-    pub const DXT1: u32 = u32_code!(b"DXT1");
-    pub const DXT2: u32 = u32_code!(b"DXT2");
-    pub const DXT3: u32 = u32_code!(b"DXT3");
-    pub const DXT4: u32 = u32_code!(b"DXT4");
-    pub const DXT5: u32 = u32_code!(b"DXT5");
-    pub const R8G8_B8G8: u32 = u32_code!(b"RGBG");
-    pub const G8R8_G8B8: u32 = u32_code!(b"GRGB");
+    pub const DXT1: u32 = 0x31545844; //u32_code!(b"DXT1");
+    pub const DXT2: u32 = 0x32545844; //u32_code!(b"DXT2");
+    pub const DXT3: u32 = 0x33545844; //u32_code!(b"DXT3");
+    pub const DXT4: u32 = 0x34545844; //u32_code!(b"DXT4");
+    pub const DXT5: u32 = 0x35545844; //u32_code!(b"DXT5");
+    pub const R8G8_B8G8: u32 = 0x47424752; //u32_code!(b"RGBG");
+    pub const G8R8_G8B8: u32 = 0x42475247;//u32_code!(b"GRGB");
     pub const A16B16G16R16: u32 = 36;
     pub const Q16W16V16U16: u32 = 110;
     pub const R16F: u32 = 111;
@@ -176,21 +179,21 @@ impl FourCC {
     pub const R32F: u32 = 114;
     pub const G32R32F: u32 = 115;
     pub const A32B32G32R32F: u32 = 116;
-    pub const UYVY: u32 = u32_code!(b"UYVY");
-    pub const YUY2: u32 = u32_code!(b"YUY2");
+    pub const UYVY: u32 = 0x59565955; //u32_code!(b"UYVY");
+    pub const YUY2: u32 = 0x32595559; //u32_code!(b"YUY2");
     pub const CXV8U8: u32 = 117;
-    pub const DX10: u32 = u32_code!(b"DX10");
+    pub const DX10: u32 = 0x30315844; //u32_code!(b"DX10");
 
     // DXGI formats (different names, often for same things)
-    pub const BC1_UNORM: u32 = u32_code!(b"DXT1");
-    pub const BC2_UNORM: u32 = u32_code!(b"DXT3");
-    pub const BC3_UNORM: u32 = u32_code!(b"DXT5");
-    pub const BC4_UNORM: u32 = u32_code!(b"BC4U");
-    pub const BC4_SNORM: u32 = u32_code!(b"BC4S");
-    pub const BC5_UNORM: u32 = u32_code!(b"ATI2");
-    pub const BC5_SNORM: u32 = u32_code!(b"BC5S");
-    pub const R8G8_B8G8_UNORM: u32 = u32_code!(b"RGBG");
-    pub const G8R8_G8B8_UNORM: u32 = u32_code!(b"GRGB");
+    pub const BC1_UNORM: u32 = 0x31545844; //u32_code!(b"DXT1");
+    pub const BC2_UNORM: u32 = 0x33545844; //u32_code!(b"DXT3");
+    pub const BC3_UNORM: u32 = 0x35545844; //u32_code!(b"DXT5");
+    pub const BC4_UNORM: u32 = 0x55344342; //u32_code!(b"BC4U");
+    pub const BC4_SNORM: u32 = 0x53344342; //u32_code!(b"BC4S");
+    pub const BC5_UNORM: u32 = 0x32495441; //u32_code!(b"ATI2");
+    pub const BC5_SNORM: u32 = 0x53354342; //u32_code!(b"BC5S");
+    pub const R8G8_B8G8_UNORM: u32 = 0x47424752; //u32_code!(b"RGBG");
+    pub const G8R8_G8B8_UNORM: u32 = 0x42475247; //u32_code!(b"GRGB");
     pub const R16G16B16A16_UNORM: u32 = 36;
     pub const R16G16B16A16_SNORM: u32 = 110;
     pub const R16_FLOAT: u32 = 111;
