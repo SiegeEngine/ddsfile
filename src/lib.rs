@@ -56,6 +56,15 @@ pub struct Dds {
 impl Dds {
     const MAGIC: u32 = 0x20534444; // b"DDS " in little endian
 
+    pub fn new(height: u32, width: u32, pixel_format: PixelFormat, data: Vec<u8>) -> Dds
+    {
+        Dds {
+            header: Header::new(height, width, pixel_format),
+            header10: None,
+            data: data,
+        }
+    }
+
     pub fn read<R: Read>(r: &mut R) -> Result<Dds> {
         let magic = r.read_u32::<LittleEndian>()?;
         if magic != Self::MAGIC {
