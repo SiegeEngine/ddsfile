@@ -37,11 +37,14 @@ pub use errors::*;
 mod pixel_format;
 pub use pixel_format::{PixelFormat, PixelFormatFlags, FourCC};
 
+mod format;
+pub use format::DxgiFormat;
+
 mod header;
 pub use header::{Header, HeaderFlags, Caps, Caps2};
 
 mod header10;
-pub use header10::{Header10, DxgiFormat, D3D10ResourceDimension, MiscFlag, AlphaMode};
+pub use header10::{Header10, D3D10ResourceDimension, MiscFlag, AlphaMode};
 
 use std::io::{Read, Write};
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
