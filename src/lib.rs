@@ -100,4 +100,56 @@ impl Dds {
         w.write_all(&self.data)?;
         Ok(())
     }
+
+    pub fn get_d3d_format(&self) -> Option<D3DFormat>
+    {
+        // FIXME: some d3d formats are equivalent to some dxgi formats.
+        //    but we dont have a try_from() between them yet.
+        //    Right now we will yield None if the format is dxgi, but
+        //    later on we should try to convert.
+
+        D3DFormat::try_from_pixel_format(&self.header.spf)
+    }
+
+    pub fn get_dxgi_format(&self) -> Option<DxgiFormat>
+    {
+        // FIXME: some d3d formats are equivalent to some dxgi formats.
+        //    but we dont have a try_from() between them yet.
+        //    Right now we will yield None if the format is d3d, but
+        //    later on we should try to convert.
+        if let Some(ref h10) = self.header10 {
+            Some(h10.dxgi_format)
+        } else {
+            None
+        }
+    }
+
+    pub fn get_main_texture_data_size(&self) -> Option<u32> {
+        if let Some(pitch) = self.header.pitch {
+            Some(pitch * self.header.height)
+        }
+        else if let Some(ls) = self.header.linear_size {
+            Some(ls)
+        }
+        else {
+            if let Some(dxgi) = self.get_dxgi_format() {
+                let height = self.header.height / dxgi.get_pitch_height();
+                if let Some(pitch) = dxgi.get_pitch(self.header.width) {
+                    Some(pitch * height)
+                } else {
+                    None
+                }
+            } else if let Some(d3d) = self.get_d3d_format() {
+                let height = self.header.height / d3d.get_pitch_height();
+                if let Some(pitch) = d3d.get_pitch(self.header.width) {
+                    Some(pitch * height)
+                } else {
+                    None
+                }
+            }
+            else {
+                None
+            }
+        }
+    }
 }

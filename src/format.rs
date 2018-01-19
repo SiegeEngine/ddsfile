@@ -173,6 +173,15 @@ impl DxgiFormat {
         }
     }
 
+    pub fn get_pitch_height(&self) -> u32
+    {
+        if self.block_size().is_some() {
+            4
+        } else {
+            1
+        }
+    }
+
     pub fn get_bits_per_pixel(&self) -> Option<u32>
     {
         match *self {
@@ -406,6 +415,15 @@ impl D3DFormat {
         }
         else {
             None
+        }
+    }
+
+    pub fn get_pitch_height(&self) -> u32
+    {
+        if self.block_size().is_some() {
+            4
+        } else {
+            1
         }
     }
 
