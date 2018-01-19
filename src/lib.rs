@@ -38,7 +38,7 @@ mod pixel_format;
 pub use pixel_format::{PixelFormat, PixelFormatFlags, FourCC};
 
 mod format;
-pub use format::DxgiFormat;
+pub use format::{DxgiFormat, D3DFormat};
 
 mod header;
 pub use header::{Header, HeaderFlags, Caps, Caps2};
