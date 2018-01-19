@@ -41,8 +41,10 @@ pub struct Header {
     pub width: u32,
 
     /// The pitch or number of bytes per scan line in an uncompressed texture;
+    pub pitch: Option<u32>,
+
     /// The total number of bytes in a top level texture for a compressed texture
-    pub pitch_or_linear_size: Option<u32>,
+    pub linear_size: Option<u32>,
 
     /// Depth of a volume texture (in pixels)
     pub depth: Option<u32>,
@@ -84,7 +86,8 @@ impl Header {
                 | HeaderFlags::PIXELFORMAT,
             height: height,
             width: width,
-            pitch_or_linear_size: None,
+            pitch: None,
+            linear_size: None,
             depth: None,
             mip_map_count: None,
             reserved1: [0; 11],
@@ -124,9 +127,12 @@ impl Header {
             flags: flags,
             height: height,
             width: width,
-            pitch_or_linear_size: if flags.contains(HeaderFlags::PITCH)
-                || flags.contains(HeaderFlags::LINEARSIZE)
-            {
+            pitch: if flags.contains(HeaderFlags::PITCH) {
+                Some(pitch_or_linear_size)
+            } else {
+                None
+            },
+            linear_size:  if flags.contains(HeaderFlags::LINEARSIZE) {
                 Some(pitch_or_linear_size)
             } else {
                 None
@@ -157,7 +163,13 @@ impl Header {
         w.write_u32::<LittleEndian>(self.flags.bits())?;
         w.write_u32::<LittleEndian>(self.height)?;
         w.write_u32::<LittleEndian>(self.width)?;
-        w.write_u32::<LittleEndian>(self.pitch_or_linear_size.unwrap_or(0))?;
+        if let Some(pitch) = self.pitch {
+            w.write_u32::<LittleEndian>(pitch)?;
+        } else if let Some(ls) = self.linear_size {
+            w.write_u32::<LittleEndian>(ls)?;
+        } else {
+            w.write_u32::<LittleEndian>(0)?;
+        }
         w.write_u32::<LittleEndian>(self.depth.unwrap_or(0))?;
         w.write_u32::<LittleEndian>(self.mip_map_count.unwrap_or(0))?;
         for u in &self.reserved1 {
