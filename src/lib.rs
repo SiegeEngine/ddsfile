@@ -38,7 +38,7 @@ mod pixel_format;
 pub use pixel_format::{PixelFormat, PixelFormatFlags, FourCC};
 
 mod format;
-pub use format::{DxgiFormat, D3DFormat};
+pub use format::{DxgiFormat, D3DFormat, DataFormat};
 
 mod header;
 pub use header::{Header, HeaderFlags, Caps, Caps2};
@@ -132,22 +132,20 @@ impl Dds {
             Some(ls)
         }
         else {
-            if let Some(dxgi) = self.get_dxgi_format() {
-                let height = self.header.height / dxgi.get_pitch_height();
-                if let Some(pitch) = dxgi.get_pitch(self.header.width) {
-                    Some(pitch * height)
-                } else {
-                    None
-                }
+            let format: Box<DataFormat> = if let Some(dxgi) = self.get_dxgi_format() {
+                Box::new(dxgi)
             } else if let Some(d3d) = self.get_d3d_format() {
-                let height = self.header.height / d3d.get_pitch_height();
-                if let Some(pitch) = d3d.get_pitch(self.header.width) {
-                    Some(pitch * height)
-                } else {
-                    None
-                }
-            }
-            else {
+                Box::new(d3d)
+            } else {
+                return None
+            };
+
+            let pitch_height = format.get_pitch_height();
+            let height = (self.header.height + (pitch_height-1))/ pitch_height;
+
+            if let Some(pitch) = format.get_pitch(self.header.width) {
+                Some(pitch * height)
+            } else {
                 None
             }
         }

@@ -22,6 +22,29 @@
 
 use pixel_format::{PixelFormat, PixelFormatFlags, FourCC};
 
+pub trait DataFormat {
+    fn get_pitch(&self, width: u32) -> Option<u32>;
+    fn get_bits_per_pixel(&self) -> Option<u8>;
+    fn get_block_size(&self) -> Option<u32>;
+
+    fn get_pitch_height(&self) -> u32 {
+        if self.get_block_size().is_some() {
+            4
+        } else {
+            1
+        }
+    }
+    fn get_minimum_mipmap_size_in_bytes(&self) -> Option<u32> {
+        if let Some(bc) = self.get_bits_per_pixel() {
+            Some((bc as u32 + 7) / 8)
+        } else if let Some(bs) = self.get_block_size() {
+            Some((bs + 7) / 8)
+        } else {
+            return None; // we don't have enough information
+        }
+    }
+}
+
 enum_from_primitive! {
     #[allow(non_camel_case_types)]
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -149,10 +172,8 @@ enum_from_primitive! {
     }
 }
 
-impl DxgiFormat {
-
-    pub fn get_pitch(&self, width: u32) -> Option<u32>
-    {
+impl DataFormat for DxgiFormat {
+    fn get_pitch(&self, width: u32) -> Option<u32> {
         // see https://msdn.microsoft.com/en-us/library/bb943991.aspx
         match *self {
             DxgiFormat::R8G8_B8G8_UNorm |
@@ -165,7 +186,7 @@ impl DxgiFormat {
         if let Some(bpp) = self.get_bits_per_pixel() {
             Some((width * bpp as u32 + 7) / 8)
         }
-        else if let Some(bs) = self.block_size() {
+        else if let Some(bs) = self.get_block_size() {
             Some(1.max(((width + 3)/4)) * bs)
         }
         else {
@@ -173,17 +194,7 @@ impl DxgiFormat {
         }
     }
 
-    pub fn get_pitch_height(&self) -> u32
-    {
-        if self.block_size().is_some() {
-            4
-        } else {
-            1
-        }
-    }
-
-    pub fn get_bits_per_pixel(&self) -> Option<u32>
-    {
+    fn get_bits_per_pixel(&self) -> Option<u8> {
         match *self {
             DxgiFormat::Unknown => None,
 
@@ -311,8 +322,7 @@ impl DxgiFormat {
         }
     }
 
-    pub fn block_size(&self) -> Option<u32>
-    {
+    fn get_block_size(&self) -> Option<u32> {
         match *self {
             DxgiFormat::BC1_Typeless |
             DxgiFormat::BC1_UNorm |
@@ -347,6 +357,7 @@ impl DxgiFormat {
         }
     }
 }
+
 
 // We derive format from three possible sources:
 //   PixelFormat
@@ -395,8 +406,8 @@ pub enum D3DFormat {
     CXV8U8,
 }
 
-impl D3DFormat {
-    pub fn get_pitch(&self, width: u32) -> Option<u32>
+impl DataFormat for D3DFormat {
+    fn get_pitch(&self, width: u32) -> Option<u32>
     {
         // see https://msdn.microsoft.com/en-us/library/bb943991.aspx
         match *self {
@@ -407,10 +418,10 @@ impl D3DFormat {
             _ => {}
         };
 
-        if let Some(bpp) = self.rgb_bit_count() {
+        if let Some(bpp) = self.get_bits_per_pixel() {
             Some((width * bpp as u32 + 7) / 8)
         }
-        else if let Some(bs) = self.block_size() {
+        else if let Some(bs) = self.get_block_size() {
             Some(1.max(((width + 3)/4)) * bs)
         }
         else {
@@ -418,16 +429,7 @@ impl D3DFormat {
         }
     }
 
-    pub fn get_pitch_height(&self) -> u32
-    {
-        if self.block_size().is_some() {
-            4
-        } else {
-            1
-        }
-    }
-
-    pub fn rgb_bit_count(&self) -> Option<u8> {
+    fn get_bits_per_pixel(&self) -> Option<u8> {
         match *self {
             D3DFormat::A8B8G8R8 => Some(32),
             D3DFormat::G16R16 => Some(32),
@@ -469,7 +471,7 @@ impl D3DFormat {
         }
     }
 
-    pub fn block_size(&self) -> Option<u32> {
+    fn get_block_size(&self) -> Option<u32> {
         match *self {
             D3DFormat::DXT1 => Some(8),
             D3DFormat::DXT2 |
@@ -480,7 +482,9 @@ impl D3DFormat {
             _ => None,
         }
     }
+}
 
+impl D3DFormat {
     pub fn r_bit_mask(&self) -> Option<u32> {
         match *self {
             D3DFormat::A8B8G8R8 => Some(0x0000_00ff),
