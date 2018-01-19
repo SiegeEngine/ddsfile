@@ -167,19 +167,32 @@ enum_from_primitive! {
 pub struct Header10 {
     pub dxgi_format: DxgiFormat,
     pub resource_dimension: D3D10ResourceDimension,
-    pub misc_flag: u32,
+    misc_flag: MiscFlag,
     pub array_size: u32,
-    pub misc_flags2: u32,
+    /// This is called misc_flags2 in the official documentation
+    pub alpha_mode: AlphaMode,
 }
 
 impl Header10 {
+    pub fn new() -> Header10 {
+        Header10 {
+            dxgi_format: DxgiFormat::Unknown,
+            resource_dimension: D3D10ResourceDimension::Unknown,
+            misc_flag: MiscFlag::empty(),
+            array_size: 0,
+            alpha_mode: AlphaMode::Unknown,
+        }
+    }
+
     pub fn read<R: Read>(r: &mut R) -> Result<Header10>
     {
         let dxgi_format = r.read_u32::<LittleEndian>()?;
         let resource_dimension = r.read_u32::<LittleEndian>()?;
-        let misc_flag = r.read_u32::<LittleEndian>()?;
+        let misc_flag = MiscFlag::from_bits_truncate(
+            r.read_u32::<LittleEndian>()?
+        );
         let array_size = r.read_u32::<LittleEndian>()?;
-        let misc_flags2 = r.read_u32::<LittleEndian>()?;
+        let alpha_mode = r.read_u32::<LittleEndian>()?;
 
         let dxgi_format_result: Result<DxgiFormat> =
             DxgiFormat::from_u32(dxgi_format).ok_or(
@@ -190,12 +203,17 @@ impl Header10 {
                 ErrorKind::InvalidField("resource_dimension".to_owned()).into()
             );
 
+        let alpha_mode: Result<AlphaMode> =
+            AlphaMode::from_u32(alpha_mode).ok_or(
+                ErrorKind::InvalidField("alpha mode (misc_flags2)".to_owned()).into()
+            );
+
         Ok(Header10 {
             dxgi_format: dxgi_format_result?,
             resource_dimension: resource_dimension_result?,
             misc_flag: misc_flag,
             array_size: array_size,
-            misc_flags2: misc_flags2,
+            alpha_mode: alpha_mode?,
         })
     }
 
@@ -203,9 +221,28 @@ impl Header10 {
     {
         w.write_u32::<LittleEndian>(self.dxgi_format as u32)?;
         w.write_u32::<LittleEndian>(self.resource_dimension as u32)?;
-        w.write_u32::<LittleEndian>(self.misc_flag)?;
+        w.write_u32::<LittleEndian>(self.misc_flag.bits())?;
         w.write_u32::<LittleEndian>(self.array_size)?;
-        w.write_u32::<LittleEndian>(self.misc_flags2)?;
+        w.write_u32::<LittleEndian>(self.alpha_mode as u32)?;
         Ok(())
+    }
+}
+
+bitflags! {
+    pub struct MiscFlag: u32 {
+        /// 2D Texture is a cube-map texture
+        const TEXTURECUBE = 0x4;
+    }
+}
+
+enum_from_primitive! {
+    #[allow(non_camel_case_types)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    pub enum AlphaMode {
+        Unknown = 0x0,
+        Straight = 0x1,
+        PreMultiplied = 0x2,
+        Opaque = 0x3,
+        Custom = 0x4,
     }
 }

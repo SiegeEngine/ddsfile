@@ -41,7 +41,7 @@ mod header;
 pub use header::{Header, HeaderFlags, Caps, Caps2};
 
 mod header10;
-pub use header10::{Header10, DxgiFormat, D3D10ResourceDimension};
+pub use header10::{Header10, DxgiFormat, D3D10ResourceDimension, MiscFlag, AlphaMode};
 
 use std::io::{Read, Write};
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
