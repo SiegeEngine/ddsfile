@@ -34,11 +34,8 @@ mod tests;
 mod errors;
 pub use errors::*;
 
-mod pixel_format;
-pub use pixel_format::{PixelFormat, PixelFormatFlags, FourCC};
-
 mod format;
-pub use format::{DxgiFormat, D3DFormat, DataFormat};
+pub use format::{DxgiFormat, D3DFormat, DataFormat, PixelFormat, PixelFormatFlags, FourCC};
 
 mod header;
 pub use header::{Header, HeaderFlags, Caps, Caps2};

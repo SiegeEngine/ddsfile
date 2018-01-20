@@ -23,7 +23,7 @@
 use errors::*;
 use std::io::{Read, Write};
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
-use pixel_format::PixelFormat;
+use ::PixelFormat;
 
 #[derive(Debug, Clone)]
 pub struct Header {

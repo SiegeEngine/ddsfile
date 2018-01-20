@@ -20,7 +20,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-use pixel_format::{PixelFormat, PixelFormatFlags, FourCC};
+mod pixel_format;
+pub use self::pixel_format::{PixelFormat, PixelFormatFlags, FourCC};
 
 pub trait DataFormat {
     /// This gets the number of bytes required to store one row of data
