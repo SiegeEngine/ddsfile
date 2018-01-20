@@ -23,7 +23,7 @@
 use errors::*;
 use std::io::{Read, Write};
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
-use ::PixelFormat;
+use ::{PixelFormat, D3DFormat, DxgiFormat, DataFormat};
 
 #[derive(Debug, Clone)]
 pub struct Header {
@@ -78,26 +78,120 @@ pub struct Header {
     reserved2: u32,
 }
 
-impl Header {
-    pub fn new(height: u32, width: u32, pixel_format: PixelFormat) -> Header {
+impl Default for Header {
+    fn default() -> Header {
         Header {
-            size: 124,
+            size: 124, // must be 124
             flags: HeaderFlags::CAPS | HeaderFlags::HEIGHT | HeaderFlags::WIDTH
                 | HeaderFlags::PIXELFORMAT,
-            height: height,
-            width: width,
+            height: 0,
+            width: 0,
             pitch: None,
             linear_size: None,
             depth: None,
             mip_map_count: None,
             reserved1: [0; 11],
-            spf: pixel_format,
+            spf: Default::default(),
             caps: Caps::TEXTURE,
             caps2: Caps2::empty(),
             caps3: 0,
             caps4: 0,
-            reserved2: 0,
+            reserved2: 0
         }
+    }
+}
+
+impl Header {
+    pub fn new_d3d(height: u32, width: u32, format: D3DFormat,
+                   mipmap_levels: Option<u32>, array_layers: Option<u32>,
+                   caps2: Option<Caps2>)
+                   -> Result<Header>
+    {
+        let mut header: Header = Default::default();
+
+        header.height = height;
+        header.width = width;
+        header.mip_map_count = mipmap_levels;
+        header.depth = array_layers;
+        header.spf = From::from(format);
+
+        if let Some(mml) = mipmap_levels {
+            if mml > 1 {
+                header.caps.insert(Caps::COMPLEX | Caps::MIPMAP);
+            }
+        }
+        if let Some(al) = array_layers {
+            if al > 1 {
+                header.caps.insert(Caps::COMPLEX);
+            }
+        }
+
+        // Let the caller handle caps2.
+        if let Some(c2) = caps2 {
+            header.caps2 = c2;
+        }
+
+        let compressed: bool = format.get_block_size().is_some();
+        let pitch: u32 = match format.get_pitch(width) {
+            Some(pitch) => pitch,
+            None => return Err(ErrorKind::UnsupportedFormat.into()),
+        };
+
+        if compressed {
+            header.flags = header.flags | HeaderFlags::LINEARSIZE;
+            header.linear_size = Some(pitch);
+        } else {
+            header.flags = header.flags | HeaderFlags::PITCH;
+            header.pitch = Some(pitch);
+        }
+
+        Ok(header)
+    }
+
+    pub fn new_dxgi(height: u32, width: u32, format: DxgiFormat,
+                    mipmap_levels: Option<u32>, array_layers: Option<u32>,
+                    caps2: Option<Caps2>)
+                    -> Result<Header>
+    {
+        let mut header: Header = Default::default();
+
+        header.height = height;
+        header.width = width;
+        header.mip_map_count = mipmap_levels;
+        header.depth = array_layers;
+        header.spf = From::from(format);
+
+        if let Some(mml) = mipmap_levels {
+            if mml > 1 {
+                header.caps.insert(Caps::COMPLEX | Caps::MIPMAP);
+            }
+        }
+        if let Some(al) = array_layers {
+            if al > 1 {
+                header.caps.insert(Caps::COMPLEX);
+            }
+        }
+
+        // Let the caller handle caps2.
+        if let Some(c2) = caps2 {
+            header.caps2 = c2;
+        }
+
+        let compressed: bool = format.get_block_size().is_some();
+        let pitch: u32 = match format.get_pitch(width) {
+            Some(pitch) => pitch,
+            None => return Err(ErrorKind::UnsupportedFormat.into()),
+        };
+
+        if compressed {
+            header.flags = header.flags | HeaderFlags::LINEARSIZE;
+            header.linear_size = Some(pitch);
+        } else {
+            header.flags = header.flags | HeaderFlags::PITCH;
+            header.pitch = Some(pitch);
+        }
+
+        Ok(header)
     }
 
     pub fn read<R: Read>(r: &mut R) -> Result<Header>

@@ -47,14 +47,35 @@ pub struct Header10 {
     pub alpha_mode: AlphaMode,
 }
 
-impl Header10 {
-    pub fn new() -> Header10 {
+impl Default for Header10 {
+    fn default() -> Header10 {
         Header10 {
             dxgi_format: DxgiFormat::Unknown,
             resource_dimension: D3D10ResourceDimension::Unknown,
             misc_flag: MiscFlag::empty(),
             array_size: 0,
             alpha_mode: AlphaMode::Unknown,
+        }
+    }
+}
+
+impl Header10 {
+    pub fn new(format: DxgiFormat, is_cubemap: bool,
+               resource_dimension: D3D10ResourceDimension,
+               array_size: u32,
+               alpha_mode: AlphaMode)
+               -> Header10
+    {
+        let mut flags = MiscFlag::empty();
+        if is_cubemap {
+            flags = flags | MiscFlag::TEXTURECUBE
+        };
+        Header10 {
+            dxgi_format: format,
+            resource_dimension: resource_dimension,
+            misc_flag: flags,
+            array_size: array_size,
+            alpha_mode: alpha_mode,
         }
     }
 
