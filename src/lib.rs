@@ -66,15 +66,14 @@ impl Dds {
         let boxformat: Box<DataFormat> = Box::new(format);
 
         let size = match get_texture_size(None, None, &boxformat,
-                                          width as usize, height as usize,
-                                          depth)
+                                          width, height, depth)
         {
             Some(s) => s,
             None => return Err(ErrorKind::UnsupportedFormat.into()),
         };
 
         let mml = mipmap_levels.unwrap_or(1);
-        let array_stride = get_array_stride(size, &boxformat, mml as usize)?;
+        let array_stride = get_array_stride(size, &boxformat, mml)?;
 
         let data_size = array_stride;
 
@@ -82,7 +81,7 @@ impl Dds {
             header: Header::new_d3d(height, width, depth, format, mipmap_levels,
                                     caps2)?,
             header10: None,
-            data: vec![0; data_size],
+            data: vec![0; data_size as usize],
         })
     }
 
@@ -96,13 +95,13 @@ impl Dds {
                     -> Result<Dds>
     {
         let arraysize = match array_layers {
-            Some(s) => s as usize,
+            Some(s) => s,
             None => 1,
         };
         let boxformat: Box<DataFormat> = Box::new(format);
 
         let size = match get_texture_size(None, None, &boxformat,
-                                          width as usize, height as usize,
+                                          width, height,
                                           depth)
         {
             Some(s) => s,
@@ -110,19 +109,19 @@ impl Dds {
         };
 
         let mml = mipmap_levels.unwrap_or(1);
-        let array_stride = get_array_stride(size, &boxformat, mml as usize)?;
+        let array_stride = get_array_stride(size, &boxformat, mml)?;
 
         let data_size = arraysize * array_stride;
 
         let header10 = Header10::new(
             format, is_cubemap, resource_dimension,
-            arraysize as u32, alpha_mode);
+            arraysize, alpha_mode);
 
         Ok(Dds {
             header: Header::new_dxgi(height, width, depth, format, mipmap_levels,
                                      array_layers, caps2)?,
             header10: Some(header10),
-            data: vec![0; data_size],
+            data: vec![0; data_size as usize],
         })
     }
 
@@ -220,6 +219,8 @@ impl Dds {
                         -> Result<&'a[u8]>
     {
         let (offset,size) = self.get_offset_and_size(array_layer)?;
+        let offset = offset as usize;
+        let size = size as usize;
         self.data.get(offset .. offset+size).ok_or(
             ErrorKind::OutOfBounds.into())
     }
@@ -230,11 +231,13 @@ impl Dds {
                             -> Result<&'a mut [u8]>
     {
         let (offset,size) = self.get_offset_and_size(array_layer)?;
+        let offset = offset as usize;
+        let size = size as usize;
         self.data.get_mut(offset .. offset+size).ok_or(
             ErrorKind::OutOfBounds.into())
     }
 
-    fn get_offset_and_size(&self, array_layer: u32) -> Result<(usize, usize)>
+    fn get_offset_and_size(&self, array_layer: u32) -> Result<(u32, u32)>
     {
         // Verify request bounds
         if array_layer >= self.get_num_array_layers() {
@@ -246,19 +249,19 @@ impl Dds {
             None => return Err(ErrorKind::UnsupportedFormat.into())
         };
 
-        let texture_size: usize = match get_texture_size(
+        let texture_size: u32 = match get_texture_size(
             self.header.pitch, self.header.linear_size, &format,
-            self.header.width as usize, self.header.height as usize,
+            self.header.width, self.header.height,
             self.header.depth
         ) {
-            Some(size) => size as usize,
+            Some(size) => size,
             None => return Err(ErrorKind::UnsupportedFormat.into()),
         };
 
         let array_stride = get_array_stride(
-            texture_size as usize, &format, self.get_num_mipmap_levels() as usize)?;
+            texture_size, &format, self.get_num_mipmap_levels())?;
 
-        let offset = array_layer as usize * array_stride;
+        let offset = array_layer * array_stride;
 
         Ok((offset, array_stride))
     }
@@ -266,39 +269,39 @@ impl Dds {
 
 fn get_texture_size(pitch: Option<u32>, linear_size: Option<u32>,
                     format: &Box<DataFormat>,
-                    width: usize, height: usize, depth: Option<u32>)
-                    -> Option<usize>
+                    width: u32, height: u32, depth: Option<u32>)
+                    -> Option<u32>
 {
-    let depth = depth.unwrap_or(1) as usize;
+    let depth = depth.unwrap_or(1);
     if let Some(pitch) = pitch {
-        Some(pitch as usize * height * depth)
+        Some(pitch * height * depth)
     }
     else if let Some(ls) = linear_size {
-        Some(ls as usize * depth)
+        Some(ls * depth)
     }
     else {
-        let pitch_height = format.get_pitch_height() as usize;
+        let pitch_height = format.get_pitch_height();
         let row_height = (height + (pitch_height-1))/ pitch_height;
-        if let Some(pitch) = format.get_pitch(width as u32) {
-            Some(pitch as usize * row_height * depth)
+        if let Some(pitch) = format.get_pitch(width) {
+            Some(pitch * row_height * depth)
         } else {
             None
         }
     }
 }
 
-fn get_array_stride(texture_size: usize,
+fn get_array_stride(texture_size: u32,
                     format: &Box<DataFormat>,
-                    mipmap_levels: usize)
-                    -> Result<usize>
+                    mipmap_levels: u32)
+                    -> Result<u32>
 {
     let min_mipmap_size = match format.get_minimum_mipmap_size_in_bytes() {
-        Some(size) => size as usize,
+        Some(size) => size,
         None => return Err(ErrorKind::UnsupportedFormat.into()),
     };
 
-    let mut stride: usize = 0;
-    let mut current_mipsize: usize = texture_size as usize;
+    let mut stride: u32 = 0;
+    let mut current_mipsize: u32 = texture_size;
     for _ in 0..mipmap_levels {
         stride += current_mipsize;
         current_mipsize /= 4;
