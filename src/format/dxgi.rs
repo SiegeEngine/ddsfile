@@ -20,7 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-use super::pixel_format::{PixelFormat, PixelFormatFlags, FourCC};
+use super::pixel_format::FourCC;
 use super::DataFormat;
 
 enum_from_primitive! {
