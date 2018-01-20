@@ -49,6 +49,7 @@ use std::io::{Read, Write};
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 
 /// This is the main DirectDraw Surface file structure
+#[derive(Debug)]
 pub struct Dds {
     // magic is implicit
     pub header: Header,
