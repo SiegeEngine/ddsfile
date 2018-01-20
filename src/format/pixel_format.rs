@@ -126,6 +126,21 @@ impl PixelFormat {
     }
 }
 
+impl Default for PixelFormat {
+    fn default() -> PixelFormat {
+        PixelFormat {
+            size: 32, // must be 32
+            flags: PixelFormatFlags::empty(),
+            fourcc: None,
+            rgb_bit_count: None,
+            r_bit_mask: None,
+            g_bit_mask: None,
+            b_bit_mask: None,
+            a_bit_mask: None,
+        }
+    }
+}
+
 bitflags! {
     pub struct PixelFormatFlags: u32 {
         /// Texture contains alpha data.
