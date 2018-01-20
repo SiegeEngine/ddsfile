@@ -23,10 +23,19 @@
 use pixel_format::{PixelFormat, PixelFormatFlags, FourCC};
 
 pub trait DataFormat {
+    /// This gets the number of bytes required to store one row of data
     fn get_pitch(&self, width: u32) -> Option<u32>;
+
+    /// This gets the number of bits required to store a single pixel.  It is
+    /// only defined for uncompressed formats
     fn get_bits_per_pixel(&self) -> Option<u8>;
+
+    /// This gets a block compression format's block size, and is only defined
+    /// for compressed formats
     fn get_block_size(&self) -> Option<u32>;
 
+    /// This gets the height of each row of data. Normally it is 1, but for block
+    /// compressed textures, each row is 4 pixels high.
     fn get_pitch_height(&self) -> u32 {
         if self.get_block_size().is_some() {
             4
@@ -34,6 +43,10 @@ pub trait DataFormat {
             1
         }
     }
+
+    /// This gets the minimum mipmap size in bytes. Even if they go all the way
+    /// down to 1x1, there is a minimum number of bytes based on bits per pixel
+    /// or blocksize.
     fn get_minimum_mipmap_size_in_bytes(&self) -> Option<u32> {
         if let Some(bc) = self.get_bits_per_pixel() {
             Some((bc as u32 + 7) / 8)
@@ -485,6 +498,7 @@ impl DataFormat for D3DFormat {
 }
 
 impl D3DFormat {
+    /// This gets the bitmask for the red channel pixels
     pub fn r_bit_mask(&self) -> Option<u32> {
         match *self {
             D3DFormat::A8B8G8R8 => Some(0x0000_00ff),
@@ -510,6 +524,7 @@ impl D3DFormat {
         }
     }
 
+    /// This gets the bitmask for the green channel pixels
     pub fn g_bit_mask(&self) -> Option<u32> {
         match *self {
             D3DFormat::A8B8G8R8 => Some(0x0000_ff00),
@@ -535,6 +550,7 @@ impl D3DFormat {
         }
     }
 
+    /// This gets the bitmask for the blue channel pixels
     pub fn b_bit_mask(&self) -> Option<u32> {
         match *self {
             D3DFormat::A8B8G8R8 => Some(0x00ff_00000),
@@ -560,6 +576,7 @@ impl D3DFormat {
         }
     }
 
+    /// This gets the bitmask for the alpha channel pixels
     pub fn a_bit_mask(&self) -> Option<u32> {
         match *self {
             D3DFormat::A8B8G8R8 => Some(0xff00_0000),
@@ -585,6 +602,8 @@ impl D3DFormat {
         }
     }
 
+    /// This attempts to use `PixelFormat` data (e.g. from the dds.header.spf field)
+    /// to determine the `D3DFormat`.
     pub fn try_from_pixel_format(pixel_format: &PixelFormat)
                                  -> Option<D3DFormat>
     {

@@ -49,6 +49,7 @@ pub use header10::{Header10, D3D10ResourceDimension, MiscFlag, AlphaMode};
 use std::io::{Read, Write};
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 
+/// This is the main DirectDraw Surface file structure
 pub struct Dds {
     // magic is implicit
     pub header: Header,
@@ -59,6 +60,8 @@ pub struct Dds {
 impl Dds {
     const MAGIC: u32 = 0x20534444; // b"DDS " in little endian
 
+    /// Create a new DirectDraw Surface.
+    /// The data does NOT START OUT CONSISTENT at this point.  FIXME.
     pub fn new(height: u32, width: u32, pixel_format: PixelFormat, data: Vec<u8>) -> Dds
     {
         Dds {
@@ -119,6 +122,17 @@ impl Dds {
         //    later on we should try to convert.
         if let Some(ref h10) = self.header10 {
             Some(h10.dxgi_format)
+        } else {
+            None
+        }
+    }
+
+    pub fn get_format(&self) -> Option<Box<DataFormat>>
+    {
+        if let Some(dxgi) = self.get_dxgi_format() {
+            Some(Box::new(dxgi))
+        } else if let Some(d3d) = self.get_d3d_format() {
+            Some(Box::new(d3d))
         } else {
             None
         }
@@ -198,12 +212,9 @@ impl Dds {
             }
         };
 
-        let format: Box<DataFormat> = if let Some(dxgi) = self.get_dxgi_format() {
-            Box::new(dxgi)
-        } else if let Some(d3d) = self.get_d3d_format() {
-            Box::new(d3d)
-        } else {
-            return None
+        let format = match self.get_format() {
+            Some(bx) => bx,
+            None => return None,
         };
 
         let texture_size = match self.get_main_texture_data_size(&format) {
