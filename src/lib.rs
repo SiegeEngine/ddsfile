@@ -124,7 +124,7 @@ impl Dds {
         }
     }
 
-    pub fn get_main_texture_data_size(&self) -> Option<u32> {
+    fn get_main_texture_data_size(&self, format: &Box<DataFormat>) -> Option<u32> {
         if let Some(pitch) = self.header.pitch {
             Some(pitch * self.header.height)
         }
@@ -132,14 +132,6 @@ impl Dds {
             Some(ls)
         }
         else {
-            let format: Box<DataFormat> = if let Some(dxgi) = self.get_dxgi_format() {
-                Box::new(dxgi)
-            } else if let Some(d3d) = self.get_d3d_format() {
-                Box::new(d3d)
-            } else {
-                return None
-            };
-
             let pitch_height = format.get_pitch_height();
             let height = (self.header.height + (pitch_height-1))/ pitch_height;
 
@@ -147,6 +139,112 @@ impl Dds {
                 Some(pitch * height)
             } else {
                 None
+            }
+        }
+    }
+
+    pub fn get_num_array_layers(&self) -> u32 {
+        if let Some(ref h10) = self.header10 {
+            h10.array_size
+        } else {
+            1 // just the 1 layer
+        }
+    }
+
+    pub fn get_num_mipmap_levels(&self) -> u32 {
+        if let Some(mmc) = self.header.mip_map_count {
+            mmc
+        } else {
+            1 // just the main image
+        }
+    }
+
+    /// This gets a reference to the data at the given `array_layer` (which should be
+    /// 0 for textures with just one image).  If `mipmap_level` is specified, only
+    /// that mipmap level will be included, otherwise all levels will be included.
+    pub fn get_data<'a>(&'a self, array_layer: u32, mipmap_level: Option<u32>)
+                        -> Option<&'a[u8]>
+    {
+        match self.get_offset_and_size(array_layer, mipmap_level)
+        {
+            Some((offset,size)) => return self.data.get(offset .. offset+size),
+            None => None
+        }
+    }
+
+    /// This gets a reference to the data at the given `array_layer` (which should be
+    /// 0 for textures with just one image).  If `mipmap_level` is specified, only
+    /// that mipmap level will be included, otherwise all levels will be included.
+    pub fn get_mut_data<'a>(&'a mut self, array_layer: u32, mipmap_level: Option<u32>)
+                            -> Option<&'a mut [u8]>
+    {
+        match self.get_offset_and_size(array_layer, mipmap_level)
+        {
+            Some((offset,size)) => return self.data.get_mut(offset .. offset+size),
+            None => None
+        }
+    }
+
+    fn get_offset_and_size(&self, array_layer: u32, mipmap_level: Option<u32>)
+                           -> Option<(usize, usize)>
+    {
+        // Verify request bounds
+        if array_layer >= self.get_num_array_layers() {
+            return None;
+        }
+        if let Some(mml) = mipmap_level {
+            if mml >= self.get_num_mipmap_levels() {
+                return None;
+            }
+        };
+
+        let format: Box<DataFormat> = if let Some(dxgi) = self.get_dxgi_format() {
+            Box::new(dxgi)
+        } else if let Some(d3d) = self.get_d3d_format() {
+            Box::new(d3d)
+        } else {
+            return None
+        };
+
+        let texture_size = match self.get_main_texture_data_size(&format) {
+            Some(size) => size,
+            None => return None
+        };
+
+        let min_mipmap_size = match format.get_minimum_mipmap_size_in_bytes() {
+            Some(size) => size as usize,
+            None => return None
+        };
+
+        let array_stride: usize = {
+            let mut stride = 0;
+            let mut current_mipsize = texture_size as usize;
+            for _ in 0..self.get_num_mipmap_levels() {
+                stride += current_mipsize;
+                current_mipsize /= 4;
+                if current_mipsize < min_mipmap_size {
+                    current_mipsize = min_mipmap_size
+                }
+            }
+            stride as usize
+        };
+
+        let mut offset = array_layer as usize * array_stride;
+
+        match mipmap_level {
+            None => {
+                Some((offset, array_stride))
+            },
+            Some(mml) => {
+                let mut current_mipsize: usize = texture_size as usize;
+                for _ in 0..mml {
+                    offset += current_mipsize;
+                    current_mipsize /= 4;
+                    if current_mipsize < min_mipmap_size {
+                        current_mipsize = min_mipmap_size
+                    }
+                }
+                Some((offset, current_mipsize))
             }
         }
     }
