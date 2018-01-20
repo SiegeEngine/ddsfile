@@ -334,4 +334,117 @@ impl DataFormat for DxgiFormat {
             _ => None,
         }
     }
+
+    fn get_fourcc(&self) -> Option<FourCC> {
+        // note: we never use this. For Dxgi formats, we set FourCC to DX10 and
+        // set the format in the header10 field. But these were the FourCCs that
+        // were used prior to the header10 extension to DDS.
+        match *self {
+            DxgiFormat::BC1_UNorm => Some(FourCC(FourCC::BC1_UNORM)),
+            DxgiFormat::BC2_UNorm => Some(FourCC(FourCC::BC2_UNORM)),
+            DxgiFormat::BC3_UNorm => Some(FourCC(FourCC::BC3_UNORM)),
+            DxgiFormat::BC4_UNorm => Some(FourCC(FourCC::BC4_UNORM)),
+            DxgiFormat::BC4_SNorm => Some(FourCC(FourCC::BC4_SNORM)),
+            DxgiFormat::BC5_UNorm => Some(FourCC(FourCC::BC5_UNORM)),
+            DxgiFormat::BC5_SNorm  => Some(FourCC(FourCC::BC5_SNORM)),
+            DxgiFormat::R8G8_B8G8_UNorm => Some(FourCC(FourCC::R8G8_B8G8_UNORM)),
+            DxgiFormat::G8R8_G8B8_UNorm => Some(FourCC(FourCC::G8R8_G8B8_UNORM)),
+            DxgiFormat::R16G16B16A16_UNorm => Some(FourCC(FourCC::R16G16B16A16_UNORM)),
+            DxgiFormat::R16G16B16A16_SNorm => Some(FourCC(FourCC::R16G16B16A16_SNORM)),
+            DxgiFormat::R16_Float => Some(FourCC(FourCC::R16_FLOAT)),
+            DxgiFormat::R16G16_Float => Some(FourCC(FourCC::R16G16_FLOAT)),
+            DxgiFormat::R16G16B16A16_Float => Some(FourCC(FourCC::R16G16B16A16_FLOAT)),
+            DxgiFormat::R32_Float => Some(FourCC(FourCC::R32_FLOAT)),
+            DxgiFormat::R32G32_Float => Some(FourCC(FourCC::R32G32_FLOAT)),
+            DxgiFormat::R32G32B32A32_Float => Some(FourCC(FourCC::R32G32B32A32_FLOAT)),
+            _ => None
+        }
+    }
+
+    // sRGB, float, and compressed, and larger than u32, will all yield None.
+    fn requires_extension(&self) -> bool {
+        match *self {
+            // Too big, and many are also not maskable types
+            DxgiFormat::R32G32B32A32_Typeless |
+            DxgiFormat::R32G32B32A32_Float |
+            DxgiFormat::R32G32B32A32_UInt |
+            DxgiFormat::R32G32B32A32_SInt |
+            DxgiFormat::R32G32B32_Typeless |
+            DxgiFormat::R32G32B32_Float |
+            DxgiFormat::R32G32B32_UInt |
+            DxgiFormat::R32G32B32_SInt |
+            DxgiFormat::R16G16B16A16_Typeless |
+            DxgiFormat::R16G16B16A16_Float |
+            DxgiFormat::R16G16B16A16_UNorm |
+            DxgiFormat::R16G16B16A16_UInt |
+            DxgiFormat::R16G16B16A16_SNorm |
+            DxgiFormat::R16G16B16A16_SInt |
+            DxgiFormat::R32G32_Typeless |
+            DxgiFormat::R32G32_Float |
+            DxgiFormat::R32G32_UInt |
+            DxgiFormat::R32G32_SInt |
+            DxgiFormat::R32G8X24_Typeless |
+            DxgiFormat::D32_Float_S8X24_UInt |
+            DxgiFormat::R32_Float_X8X24_Typeless |
+            DxgiFormat::X32_Typeless_G8X24_UInt
+                => true,
+
+            // Not maskable types
+            DxgiFormat::R10G10B10A2_Typeless |
+            DxgiFormat::R11G11B10_Float |
+            DxgiFormat::R8G8B8A8_Typeless |
+            DxgiFormat::R8G8B8A8_UNorm_sRGB |
+            DxgiFormat::R16G16_Typeless |
+            DxgiFormat::R16G16_Float |
+            DxgiFormat::R32_Typeless |
+            DxgiFormat::D32_Float |
+            DxgiFormat::R32_Float |
+            DxgiFormat::R24G8_Typeless |
+            DxgiFormat::R24_UNorm_X8_Typeless
+                => true,
+
+            // Not maskable types
+            DxgiFormat::R8G8_Typeless |
+            DxgiFormat::R16_Typeless |
+            DxgiFormat::R16_Float
+                => true,
+
+            // Not maskable types
+            DxgiFormat::R8_Typeless => true,
+
+            // Not maskable types
+            DxgiFormat::R9G9B9E5_SharedExp => true,
+
+            // Not maskable types
+            DxgiFormat::R10G10B10_XR_Bias_A2_UNorm |
+            DxgiFormat::B8G8R8A8_Typeless |
+            DxgiFormat::B8G8R8A8_UNorm_sRGB |
+            DxgiFormat::B8G8R8X8_Typeless |
+            DxgiFormat::B8G8R8X8_UNorm_sRGB
+                => true,
+
+            // Channels are not actual rgb
+            DxgiFormat::AYUV |
+            DxgiFormat::Y410 |
+            DxgiFormat::Y416 |
+            DxgiFormat::NV12 |
+            DxgiFormat::P010 |
+            DxgiFormat::P016 |
+            DxgiFormat::Format_420_Opaque |
+            DxgiFormat::YUY2 |
+            DxgiFormat::Y210 |
+            DxgiFormat::Y216 |
+            DxgiFormat::NV11 |
+            DxgiFormat::AI44 |
+            DxgiFormat::IA44 |
+            DxgiFormat::P8 |
+            DxgiFormat::A8P8 |
+            DxgiFormat::P208 |
+            DxgiFormat::V208 |
+            DxgiFormat::V408
+                => true,
+
+            _ => false
+        }
+    }
 }

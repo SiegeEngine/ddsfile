@@ -141,6 +141,52 @@ impl DataFormat for D3DFormat {
             _ => None,
         }
     }
+
+    fn get_fourcc(&self) -> Option<FourCC> {
+        match *self {
+            D3DFormat::A8B8G8R8 => None,
+            D3DFormat::G16R16 => None,
+            D3DFormat::A2B10G10R10 => None,
+            D3DFormat::A1R5G5B5 => None,
+            D3DFormat::R5G6B5 => None,
+            D3DFormat::A8 => None,
+            D3DFormat::A8R8G8B8 => None,
+            D3DFormat::X8R8G8B8 => None,
+            D3DFormat::X8B8G8R8 => None,
+            D3DFormat::A2R10G10B10 => None,
+            D3DFormat::R8G8B8 => None,
+            D3DFormat::X1R5G5B5 => None,
+            D3DFormat::A4R4G4B4 => None,
+            D3DFormat::X4R4G4B4 => None,
+            D3DFormat::A8R3G3B2 => None,
+            D3DFormat::A8L8 => None,
+            D3DFormat::L16 => None,
+            D3DFormat::L8 => None,
+            D3DFormat::A4L4 => None,
+            D3DFormat::DXT1 => Some(FourCC(FourCC::DXT1)),
+            D3DFormat::DXT3 => Some(FourCC(FourCC::DXT3)),
+            D3DFormat::DXT5 => Some(FourCC(FourCC::DXT5)),
+            D3DFormat::R8G8_B8G8 => Some(FourCC(FourCC::R8G8_B8G8)),
+            D3DFormat::G8R8_G8B8 => Some(FourCC(FourCC::G8R8_G8B8)),
+            D3DFormat::A16B16G16R16 => Some(FourCC(FourCC::A16B16G16R16)),
+            D3DFormat::Q16W16V16U16 => Some(FourCC(FourCC::Q16W16V16U16)),
+            D3DFormat::R16F => Some(FourCC(FourCC::R16F)),
+            D3DFormat::G16R16F => Some(FourCC(FourCC::G16R16F)),
+            D3DFormat::A16B16G16R16F => Some(FourCC(FourCC::A16B16G16R16F)),
+            D3DFormat::R32F => Some(FourCC(FourCC::R32F)),
+            D3DFormat::G32R32F => Some(FourCC(FourCC::G32R32F)),
+            D3DFormat::A32B32G32R32F => Some(FourCC(FourCC::A32B32G32R32F)),
+            D3DFormat::DXT2 => Some(FourCC(FourCC::DXT2)),
+            D3DFormat::DXT4 => Some(FourCC(FourCC::DXT4)),
+            D3DFormat::UYVY => Some(FourCC(FourCC::UYVY)),
+            D3DFormat::YUY2 => Some(FourCC(FourCC::YUY2)),
+            D3DFormat::CXV8U8 => Some(FourCC(FourCC::CXV8U8)),
+        }
+    }
+
+    fn requires_extension(&self) -> bool {
+        false
+    }
 }
 
 impl D3DFormat {
