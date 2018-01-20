@@ -48,5 +48,11 @@ error_chain! {
         ShortFile {
             description("File is cut short"),
         }
+        UnsupportedFormat {
+            description("Format is not supported well enough for this operation"),
+        }
+        OutOfBounds {
+            description("Request is out of bounds"),
+        }
     }
 }

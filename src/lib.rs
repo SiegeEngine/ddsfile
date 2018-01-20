@@ -171,89 +171,69 @@ impl Dds {
     }
 
     /// This gets a reference to the data at the given `array_layer` (which should be
-    /// 0 for textures with just one image).  If `mipmap_level` is specified, only
-    /// that mipmap level will be included, otherwise all levels will be included.
-    pub fn get_data<'a>(&'a self, array_layer: u32, mipmap_level: Option<u32>)
-                        -> Option<&'a[u8]>
+    /// 0 for textures with just one image).
+    pub fn get_data<'a>(&'a self, array_layer: u32)
+                        -> Result<&'a[u8]>
     {
-        match self.get_offset_and_size(array_layer, mipmap_level)
-        {
-            Some((offset,size)) => return self.data.get(offset .. offset+size),
-            None => None
-        }
+        let (offset,size) = self.get_offset_and_size(array_layer)?;
+        self.data.get(offset .. offset+size).ok_or(
+            ErrorKind::OutOfBounds.into())
     }
 
     /// This gets a reference to the data at the given `array_layer` (which should be
-    /// 0 for textures with just one image).  If `mipmap_level` is specified, only
-    /// that mipmap level will be included, otherwise all levels will be included.
-    pub fn get_mut_data<'a>(&'a mut self, array_layer: u32, mipmap_level: Option<u32>)
-                            -> Option<&'a mut [u8]>
+    /// 0 for textures with just one image).
+    pub fn get_mut_data<'a>(&'a mut self, array_layer: u32)
+                            -> Result<&'a mut [u8]>
     {
-        match self.get_offset_and_size(array_layer, mipmap_level)
-        {
-            Some((offset,size)) => return self.data.get_mut(offset .. offset+size),
-            None => None
-        }
+        let (offset,size) = self.get_offset_and_size(array_layer)?;
+        self.data.get_mut(offset .. offset+size).ok_or(
+            ErrorKind::OutOfBounds.into())
     }
 
-    fn get_offset_and_size(&self, array_layer: u32, mipmap_level: Option<u32>)
-                           -> Option<(usize, usize)>
+    fn get_offset_and_size(&self, array_layer: u32) -> Result<(usize, usize)>
     {
         // Verify request bounds
         if array_layer >= self.get_num_array_layers() {
-            return None;
+            return Err(ErrorKind::OutOfBounds.into());
         }
-        if let Some(mml) = mipmap_level {
-            if mml >= self.get_num_mipmap_levels() {
-                return None;
-            }
-        };
 
         let format = match self.get_format() {
             Some(bx) => bx,
-            None => return None,
+            None => return Err(ErrorKind::UnsupportedFormat.into())
         };
 
-        let texture_size = match self.get_main_texture_data_size(&format) {
-            Some(size) => size,
-            None => return None
-        };
-
-        let min_mipmap_size = match format.get_minimum_mipmap_size_in_bytes() {
+        let texture_size: usize = match self.get_main_texture_data_size(&format) {
             Some(size) => size as usize,
-            None => return None
+            None => return Err(ErrorKind::UnsupportedFormat.into()),
         };
 
-        let array_stride: usize = {
-            let mut stride = 0;
-            let mut current_mipsize = texture_size as usize;
-            for _ in 0..self.get_num_mipmap_levels() {
-                stride += current_mipsize;
-                current_mipsize /= 4;
-                if current_mipsize < min_mipmap_size {
-                    current_mipsize = min_mipmap_size
-                }
-            }
-            stride as usize
-        };
+        let array_stride = get_array_stride(
+            texture_size as usize, &format, self.get_num_mipmap_levels() as usize)?;
 
-        let mut offset = array_layer as usize * array_stride;
+        let offset = array_layer as usize * array_stride;
 
-        match mipmap_level {
-            None => {
-                Some((offset, array_stride))
-            },
-            Some(mml) => {
-                let mut current_mipsize: usize = texture_size as usize;
-                for _ in 0..mml {
-                    offset += current_mipsize;
-                    current_mipsize /= 4;
-                    if current_mipsize < min_mipmap_size {
-                        current_mipsize = min_mipmap_size
-                    }
-                }
-                Some((offset, current_mipsize))
-            }
+        Ok((offset, array_stride))
+    }
+}
+
+fn get_array_stride(texture_size: usize,
+                    format: &Box<DataFormat>,
+                    mipmap_levels: usize)
+                    -> Result<usize>
+{
+    let min_mipmap_size = match format.get_minimum_mipmap_size_in_bytes() {
+        Some(size) => size as usize,
+        None => return Err(ErrorKind::UnsupportedFormat.into()),
+    };
+
+    let mut stride: usize = 0;
+    let mut current_mipsize: usize = texture_size as usize;
+    for _ in 0..mipmap_levels {
+        stride += current_mipsize;
+        current_mipsize /= 4;
+        if current_mipsize < min_mipmap_size {
+            current_mipsize = min_mipmap_size;
         }
     }
+    Ok(stride)
 }
