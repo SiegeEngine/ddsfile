@@ -20,7 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-/// The main entry point for this library is the `Dds` type.
+//! The main entry point for this library is the `Dds` type.
 
 #[macro_use]
 extern crate bitflags;
@@ -60,18 +60,14 @@ impl Dds {
     const MAGIC: u32 = 0x20534444; // b"DDS " in little endian
 
     /// Create a new DirectDraw Surface with a D3DFormat
-    pub fn new_d3d(height: u32, width: u32, format: D3DFormat,
-                   mipmap_levels: Option<u32>, array_layers: Option<u32>,
-                   caps2: Option<Caps2>) -> Result<Dds>
+    pub fn new_d3d(height: u32, width: u32, depth: Option<u32>, format: D3DFormat,
+                   mipmap_levels: Option<u32>, caps2: Option<Caps2>) -> Result<Dds>
     {
-        let arraysize = match array_layers {
-            Some(s) => s as usize,
-            None => 1,
-        };
         let boxformat: Box<DataFormat> = Box::new(format);
 
         let size = match get_texture_size(None, None, &boxformat,
-                                          width as usize, height as usize)
+                                          width as usize, height as usize,
+                                          depth)
         {
             Some(s) => s,
             None => return Err(ErrorKind::UnsupportedFormat.into()),
@@ -80,18 +76,19 @@ impl Dds {
         let mml = mipmap_levels.unwrap_or(1);
         let array_stride = get_array_stride(size, &boxformat, mml as usize)?;
 
-        let data_size = arraysize * array_stride;
+        let data_size = array_stride;
 
         Ok(Dds {
-            header: Header::new_d3d(height, width, format, mipmap_levels,
-                                    array_layers, caps2)?,
+            header: Header::new_d3d(height, width, depth, format, mipmap_levels,
+                                    caps2)?,
             header10: None,
             data: vec![0; data_size],
         })
     }
 
     /// Create a new DirectDraw Surface with a DxgiFormat
-    pub fn new_dxgi(height: u32, width: u32, format: DxgiFormat,
+    pub fn new_dxgi(height: u32, width: u32, depth: Option<u32>,
+                    format: DxgiFormat,
                     mipmap_levels: Option<u32>, array_layers: Option<u32>,
                     caps2: Option<Caps2>, is_cubemap: bool,
                     resource_dimension: D3D10ResourceDimension,
@@ -105,7 +102,8 @@ impl Dds {
         let boxformat: Box<DataFormat> = Box::new(format);
 
         let size = match get_texture_size(None, None, &boxformat,
-                                          width as usize, height as usize)
+                                          width as usize, height as usize,
+                                          depth)
         {
             Some(s) => s,
             None => return Err(ErrorKind::UnsupportedFormat.into()),
@@ -121,7 +119,7 @@ impl Dds {
             arraysize as u32, alpha_mode);
 
         Ok(Dds {
-            header: Header::new_dxgi(height, width, format, mipmap_levels,
+            header: Header::new_dxgi(height, width, depth, format, mipmap_levels,
                                      array_layers, caps2)?,
             header10: Some(header10),
             data: vec![0; data_size],
@@ -250,7 +248,8 @@ impl Dds {
 
         let texture_size: usize = match get_texture_size(
             self.header.pitch, self.header.linear_size, &format,
-            self.header.width as usize, self.header.height as usize
+            self.header.width as usize, self.header.height as usize,
+            self.header.depth
         ) {
             Some(size) => size as usize,
             None => return Err(ErrorKind::UnsupportedFormat.into()),
@@ -267,20 +266,21 @@ impl Dds {
 
 fn get_texture_size(pitch: Option<u32>, linear_size: Option<u32>,
                     format: &Box<DataFormat>,
-                    width: usize, height: usize)
+                    width: usize, height: usize, depth: Option<u32>)
                     -> Option<usize>
 {
+    let depth = depth.unwrap_or(1) as usize;
     if let Some(pitch) = pitch {
-        Some(pitch as usize * height)
+        Some(pitch as usize * height * depth)
     }
     else if let Some(ls) = linear_size {
-        Some(ls as usize)
+        Some(ls as usize * depth)
     }
     else {
         let pitch_height = format.get_pitch_height() as usize;
         let row_height = (height + (pitch_height-1))/ pitch_height;
         if let Some(pitch) = format.get_pitch(width as u32) {
-            Some(pitch as usize * row_height)
+            Some(pitch as usize * row_height * depth)
         } else {
             None
         }

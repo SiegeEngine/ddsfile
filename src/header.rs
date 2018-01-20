@@ -102,9 +102,8 @@ impl Default for Header {
 }
 
 impl Header {
-    pub fn new_d3d(height: u32, width: u32, format: D3DFormat,
-                   mipmap_levels: Option<u32>, array_layers: Option<u32>,
-                   caps2: Option<Caps2>)
+    pub fn new_d3d(height: u32, width: u32, depth: Option<u32>, format: D3DFormat,
+                   mipmap_levels: Option<u32>, caps2: Option<Caps2>)
                    -> Result<Header>
     {
         let mut header: Header = Default::default();
@@ -112,7 +111,7 @@ impl Header {
         header.height = height;
         header.width = width;
         header.mip_map_count = mipmap_levels;
-        header.depth = array_layers;
+        header.depth = depth;
         header.spf = From::from(format);
 
         if let Some(mml) = mipmap_levels {
@@ -120,8 +119,8 @@ impl Header {
                 header.caps.insert(Caps::COMPLEX | Caps::MIPMAP);
             }
         }
-        if let Some(al) = array_layers {
-            if al > 1 {
+        if let Some(d) = depth {
+            if d > 1 {
                 header.caps.insert(Caps::COMPLEX);
             }
         }
@@ -148,7 +147,7 @@ impl Header {
         Ok(header)
     }
 
-    pub fn new_dxgi(height: u32, width: u32, format: DxgiFormat,
+    pub fn new_dxgi(height: u32, width: u32, depth: Option<u32>, format: DxgiFormat,
                     mipmap_levels: Option<u32>, array_layers: Option<u32>,
                     caps2: Option<Caps2>)
                     -> Result<Header>
@@ -158,12 +157,17 @@ impl Header {
         header.height = height;
         header.width = width;
         header.mip_map_count = mipmap_levels;
-        header.depth = array_layers;
+        header.depth = depth;
         header.spf = From::from(format);
 
         if let Some(mml) = mipmap_levels {
             if mml > 1 {
                 header.caps.insert(Caps::COMPLEX | Caps::MIPMAP);
+            }
+        }
+        if let Some(d) = depth {
+            if d > 1 {
+                header.caps.insert(Caps::COMPLEX);
             }
         }
         if let Some(al) = array_layers {
