@@ -30,8 +30,8 @@ extern crate enum_primitive;
 #[macro_use]
 extern crate error_chain;
 
-#[cfg(test)]
-mod tests;
+//#[cfg(test)]
+//mod tests;
 
 mod errors;
 pub use errors::*;

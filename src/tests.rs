@@ -20,7 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#[test]
-fn it_works() {
-    assert_eq!(2 + 2, 4);
-}
+//#[test]
+//fn it_works() {
+//    assert_eq!(2 + 2, 4);
+//}
