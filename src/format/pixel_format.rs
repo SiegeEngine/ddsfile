@@ -23,6 +23,7 @@
 use errors::*;
 use std::io::{Read, Write};
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
+use super::{D3DFormat, DxgiFormat, DataFormat};
 
 #[derive(Debug, Clone)]
 pub struct PixelFormat {
@@ -138,6 +139,47 @@ impl Default for PixelFormat {
             b_bit_mask: None,
             a_bit_mask: None,
         }
+    }
+}
+
+impl From<D3DFormat> for PixelFormat {
+    fn from(format: D3DFormat) -> PixelFormat
+    {
+        let mut pf: PixelFormat = Default::default();
+        if let Some(bpp) = format.get_bits_per_pixel() {
+            pf.flags.insert(PixelFormatFlags::RGB);
+            pf.rgb_bit_count = Some(bpp as u32)
+        }
+        else if let Some(fourcc) = format.get_fourcc() {
+            pf.flags.insert(PixelFormatFlags::FOURCC);
+            pf.fourcc = Some(fourcc);
+        }
+        if let Some(abitmask) = format.a_bit_mask() {
+            pf.flags.insert(PixelFormatFlags::ALPHA_PIXELS);
+            pf.a_bit_mask = Some(abitmask);
+        }
+        pf.r_bit_mask = format.r_bit_mask();
+        pf.g_bit_mask = format.g_bit_mask();
+        pf.b_bit_mask = format.b_bit_mask();
+        pf
+    }
+}
+
+impl From<DxgiFormat> for PixelFormat {
+    fn from(format: DxgiFormat) -> PixelFormat
+    {
+        let mut pf: PixelFormat = Default::default();
+        if let Some(bpp) = format.get_bits_per_pixel() {
+            pf.flags.insert(PixelFormatFlags::RGB); // means uncompressed
+            pf.rgb_bit_count = Some(bpp as u32)
+        }
+        pf.fourcc = Some(FourCC(FourCC::DX10)); // we always use extention for Dxgi
+        pf.flags.insert(PixelFormatFlags::FOURCC);
+
+        // flags::ALPHA_PIXELS is not set, use DX10 extension.
+        // r_bit_mask, g_bit_mask, b_bit_mask and a_bit_mask are not set.
+        // FIXME - we may need to set these in some circumstances.
+        pf
     }
 }
 
