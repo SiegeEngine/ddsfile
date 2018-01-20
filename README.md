@@ -2,9 +2,9 @@
 
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE-MIT)
 
-[ddsfile on crates.io](https://crates.io/crates/ddsfile)  [TBD]
+[ddsfile on crates.io](https://crates.io/crates/ddsfile)
 
-[Documentation](https://docs.rs/ddsfile)  [TBD]
+[Documentation](https://docs.rs/ddsfile)
 
 This library is for parsing and composing Microsoft DirectDraw Surface files.
 These files hold texture data for DirectX.  Other drawing APIs also can use
