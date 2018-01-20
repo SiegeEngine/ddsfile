@@ -22,10 +22,11 @@
 
 use errors::*;
 use std::io::{Read, Write};
+use std::fmt;
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 use ::{PixelFormat, D3DFormat, DxgiFormat, DataFormat};
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct Header {
     // Size of this structure in bytes; set to 124
     // technically not required, we could take this out
@@ -279,6 +280,22 @@ impl Header {
         w.write_u32::<LittleEndian>(self.caps3)?;
         w.write_u32::<LittleEndian>(self.caps4)?;
         w.write_u32::<LittleEndian>(self.reserved2)?;
+        Ok(())
+    }
+}
+
+impl fmt::Debug for Header {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        writeln!(f, "  Header:")?;
+        writeln!(f, "    flags: {:?}", self.flags)?;
+        writeln!(f, "    height: {:?}, width: {:?}, depth: {:?}",
+                 self.height, self.width, self.depth)?;
+        writeln!(f, "    pitch: {:?}  linear_size: {:?}",
+                 self.pitch, self.linear_size)?;
+        writeln!(f, "    mipmap_count: {:?}", self.mip_map_count)?;
+        writeln!(f, "    caps: {:?}, caps2 {:?}", self.caps, self.caps2)?;
+        write!(f, "{:?}", self.spf)?;
+
         Ok(())
     }
 }

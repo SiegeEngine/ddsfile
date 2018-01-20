@@ -22,6 +22,7 @@
 
 use errors::*;
 use std::io::{Read, Write};
+use std::fmt;
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 use enum_primitive::FromPrimitive;
 use format::DxgiFormat;
@@ -37,7 +38,7 @@ enum_from_primitive! {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct Header10 {
     pub dxgi_format: DxgiFormat,
     pub resource_dimension: D3D10ResourceDimension,
@@ -45,6 +46,18 @@ pub struct Header10 {
     pub array_size: u32,
     /// This is called misc_flags2 in the official documentation
     pub alpha_mode: AlphaMode,
+}
+
+impl fmt::Debug for Header10 {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        writeln!(f, "  Header10:")?;
+        writeln!(f, "    dxgi_format: {:?}", self.dxgi_format)?;
+        writeln!(f, "    resource_dimension: {:?}", self.resource_dimension)?;
+        writeln!(f, "    misc_flag: {:?}", self.misc_flag)?;
+        writeln!(f, "    array_size: {:?}", self.array_size)?;
+        write!(f, "    alpha_mode: {:?}", self.alpha_mode)?;
+        Ok(())
+    }
 }
 
 impl Default for Header10 {

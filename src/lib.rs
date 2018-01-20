@@ -46,10 +46,10 @@ mod header10;
 pub use header10::{Header10, D3D10ResourceDimension, MiscFlag, AlphaMode};
 
 use std::io::{Read, Write};
+use std::fmt;
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 
 /// This is the main DirectDraw Surface file structure
-#[derive(Debug)]
 pub struct Dds {
     // magic is implicit
     pub header: Header,
@@ -311,4 +311,25 @@ fn get_array_stride(texture_size: u32,
         }
     }
     Ok(stride)
+}
+
+impl fmt::Debug for Dds {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        writeln!(f, "Dds:")?;
+        if let Some(d3dformat) = self.get_d3d_format() {
+            writeln!(f, "  Format: {:?}", d3dformat)?;
+        } else if let Some(dxgiformat) = self.get_dxgi_format() {
+            writeln!(f, "  Format: {:?}", dxgiformat)?;
+        } else if let Some(ref fourcc) = self.header.spf.fourcc {
+            writeln!(f, "  Format: FOURCC={:?} (Unknown)", fourcc)?;
+        } else {
+            writeln!(f, "  Format UNSPECIFIED")?;
+        }
+        write!(f, "{:?}", self.header)?;
+        if let Some(ref h10) = self.header10 {
+            write!(f, "{:?}", h10)?;
+        }
+        writeln!(f, "  (data elided)")?;
+        Ok(())
+    }
 }

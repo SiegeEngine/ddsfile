@@ -22,10 +22,11 @@
 
 use errors::*;
 use std::io::{Read, Write};
+use std::fmt;
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 use super::{D3DFormat, DxgiFormat, DataFormat};
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct PixelFormat {
     /// Size of this structure in bytes; set to 32
     pub size: u32,
@@ -123,6 +124,18 @@ impl PixelFormat {
         w.write_u32::<LittleEndian>(self.g_bit_mask.unwrap_or(0))?;
         w.write_u32::<LittleEndian>(self.b_bit_mask.unwrap_or(0))?;
         w.write_u32::<LittleEndian>(self.a_bit_mask.unwrap_or(0))?;
+        Ok(())
+    }
+}
+
+impl fmt::Debug for PixelFormat {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        writeln!(f, "    Pixel Format:")?;
+        writeln!(f, "      flags: {:?}", self.flags)?;
+        writeln!(f, "      fourcc: {:?}", self.fourcc)?;
+        writeln!(f, "      bits_per_pixel: {:?}", self.rgb_bit_count)?;
+        writeln!(f, "      RGBA bitmasks: {:?}, {:?}, {:?}, {:?}",
+                 self.r_bit_mask, self.g_bit_mask, self.b_bit_mask, self.a_bit_mask)?;
         Ok(())
     }
 }
