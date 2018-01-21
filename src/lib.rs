@@ -64,7 +64,7 @@ impl Dds {
     pub fn new_d3d(height: u32, width: u32, depth: Option<u32>, format: D3DFormat,
                    mipmap_levels: Option<u32>, caps2: Option<Caps2>) -> Result<Dds>
     {
-        let size = match get_texture_size(None, None,
+        let size = match get_texture_size(format.get_pitch(width), None,
                                           format.get_pitch_height(),
                                           height, depth)
         {
@@ -103,7 +103,7 @@ impl Dds {
             None => 1,
         };
 
-        let size = match get_texture_size(None, None,
+        let size = match get_texture_size(format.get_pitch(width), None,
                                           format.get_pitch_height(),
                                           height, depth)
         {
@@ -346,8 +346,9 @@ fn get_texture_size(pitch: Option<u32>, linear_size: Option<u32>, pitch_height: 
                     -> Option<u32>
 {
     let depth = depth.unwrap_or(1);
+
     if let Some(ls) = linear_size {
-        Some(ls * depth)
+        Some(ls)
     }
     else if let Some(pitch) = pitch {
         let row_height = (height + (pitch_height-1))/ pitch_height;
