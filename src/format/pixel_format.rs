@@ -252,6 +252,8 @@ impl FourCC {
     pub const UYVY: u32 = 0x59565955; //u32_code!(b"UYVY");
     pub const YUY2: u32 = 0x32595559; //u32_code!(b"YUY2");
     pub const CXV8U8: u32 = 117;
+    pub const ATI1: u32 = 0x31495441; //u32_code!(b"ATI1"); // BC4 unorm
+    pub const ATI2: u32 = 0x32495441; //u32_code!(b"ATI2"); // BC5 unorm
     pub const DX10: u32 = 0x30315844; //u32_code!(b"DX10");
 
     // DXGI formats (different names, often for same things)

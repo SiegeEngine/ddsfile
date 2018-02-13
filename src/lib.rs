@@ -188,7 +188,7 @@ impl Dds {
         if let Some(ref h10) = self.header10 {
             Some(h10.dxgi_format)
         } else {
-            None
+            DxgiFormat::try_from_pixel_format(&self.header.spf)
         }
     }
 

@@ -20,7 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-use super::pixel_format::FourCC;
+use super::pixel_format::{PixelFormat, FourCC};
 use super::DataFormat;
 
 enum_from_primitive! {
@@ -445,6 +445,24 @@ impl DataFormat for DxgiFormat {
                 => true,
 
             _ => false
+        }
+    }
+}
+
+impl DxgiFormat {
+    pub fn try_from_pixel_format(pixel_format: &PixelFormat) -> Option<DxgiFormat>
+    {
+        if let Some(ref fourcc) = pixel_format.fourcc {
+            match fourcc.0 {
+                FourCC::DXT1 => Some(DxgiFormat::BC1_UNorm),
+                FourCC::DXT3 => Some(DxgiFormat::BC2_UNorm),
+                FourCC::DXT5 => Some(DxgiFormat::BC3_UNorm),
+                FourCC::ATI1 => Some(DxgiFormat::BC4_UNorm),
+                FourCC::ATI2 => Some(DxgiFormat::BC5_UNorm),
+                _ => None,
+            }
+        } else {
+            None
         }
     }
 }
