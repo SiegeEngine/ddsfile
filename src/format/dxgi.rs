@@ -165,7 +165,7 @@ impl DataFormat for DxgiFormat {
             Some((width * bpp as u32 + 7) / 8)
         }
         else if let Some(bs) = self.get_block_size() {
-            Some(1.max(((width + 3)/4)) * bs)
+            Some(1.max((width + 3)/4) * bs)
         }
         else {
             None
