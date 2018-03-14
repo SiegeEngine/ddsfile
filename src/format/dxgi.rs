@@ -454,9 +454,9 @@ impl DxgiFormat {
     {
         if let Some(ref fourcc) = pixel_format.fourcc {
             match fourcc.0 {
-                FourCC::DXT1 => Some(DxgiFormat::BC1_UNorm),
-                FourCC::DXT3 => Some(DxgiFormat::BC2_UNorm),
-                FourCC::DXT5 => Some(DxgiFormat::BC3_UNorm),
+                FourCC::DXT1 => Some(DxgiFormat::BC1_UNorm_sRGB),
+                FourCC::DXT3 => Some(DxgiFormat::BC2_UNorm_sRGB),
+                FourCC::DXT5 => Some(DxgiFormat::BC3_UNorm_sRGB),
                 FourCC::ATI1 => Some(DxgiFormat::BC4_UNorm),
                 FourCC::ATI2 => Some(DxgiFormat::BC5_UNorm),
                 _ => None,
