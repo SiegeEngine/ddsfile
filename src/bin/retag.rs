@@ -45,7 +45,9 @@ fn main() {
         panic!("d3d formats not implemented");
     }
 
-    file.seek(SeekFrom::Start(0));
+    if let Err(e) = file.seek(SeekFrom::Start(0)) {
+        panic!("Error seeking to start of output file: {:?}", e);
+    }
 
     if let Err(e) = dds.write(&mut file) {
         panic!("Error writing file: {:?}", e);
