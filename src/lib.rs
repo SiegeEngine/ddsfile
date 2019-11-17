@@ -193,7 +193,7 @@ impl Dds {
     }
 
     /// Get the format of the DDS as a trait (type-erasure)
-    pub fn get_format(&self) -> Option<Box<DataFormat>>
+    pub fn get_format(&self) -> Option<Box<dyn DataFormat>>
     {
         if let Some(dxgi) = self.get_dxgi_format() {
             Some(Box::new(dxgi))
