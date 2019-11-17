@@ -20,11 +20,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-use errors::*;
+use crate::error::*;
 use std::io::{Read, Write};
 use std::fmt;
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
-use ::{PixelFormat, D3DFormat, DxgiFormat, DataFormat};
+use crate::{PixelFormat, D3DFormat, DxgiFormat, DataFormat};
 
 #[derive(Clone)]
 pub struct Header {
@@ -105,7 +105,7 @@ impl Default for Header {
 impl Header {
     pub fn new_d3d(height: u32, width: u32, depth: Option<u32>, format: D3DFormat,
                    mipmap_levels: Option<u32>, caps2: Option<Caps2>)
-                   -> Result<Header>
+                   -> Result<Header, Error>
     {
         let mut header: Header = Default::default();
 
@@ -134,7 +134,7 @@ impl Header {
         let compressed: bool = format.get_block_size().is_some();
         let pitch: u32 = match format.get_pitch(width) {
             Some(pitch) => pitch,
-            None => return Err(ErrorKind::UnsupportedFormat.into()),
+            None => return Err(Error::UnsupportedFormat),
         };
 
         if compressed {
@@ -153,7 +153,7 @@ impl Header {
     pub fn new_dxgi(height: u32, width: u32, depth: Option<u32>, format: DxgiFormat,
                     mipmap_levels: Option<u32>, array_layers: Option<u32>,
                     caps2: Option<Caps2>)
-                    -> Result<Header>
+                    -> Result<Header, Error>
     {
         let mut header: Header = Default::default();
 
@@ -187,7 +187,7 @@ impl Header {
         let compressed: bool = format.get_block_size().is_some();
         let pitch: u32 = match format.get_pitch(width) {
             Some(pitch) => pitch,
-            None => return Err(ErrorKind::UnsupportedFormat.into()),
+            None => return Err(Error::UnsupportedFormat),
         };
 
         if compressed {
@@ -203,11 +203,11 @@ impl Header {
         Ok(header)
     }
 
-    pub fn read<R: Read>(r: &mut R) -> Result<Header>
+    pub fn read<R: Read>(r: &mut R) -> Result<Header, Error>
     {
         let size = r.read_u32::<LittleEndian>()?;
         if size != 124 {
-            return Err(ErrorKind::InvalidField("Header struct size".to_owned()).into());
+            return Err(Error::InvalidField("Header struct size".to_owned()));
         }
         let flags = HeaderFlags::from_bits_truncate(
             r.read_u32::<LittleEndian>()?
@@ -260,7 +260,7 @@ impl Header {
         })
     }
 
-    pub fn write<W: Write>(&self, w: &mut W) -> Result<()>
+    pub fn write<W: Write>(&self, w: &mut W) -> Result<(), Error>
     {
         w.write_u32::<LittleEndian>(self.size)?;
         w.write_u32::<LittleEndian>(self.flags.bits())?;

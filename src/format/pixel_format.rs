@@ -20,7 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-use errors::*;
+use crate::error::*;
 use std::io::{Read, Write};
 use std::fmt;
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
@@ -59,11 +59,11 @@ pub struct PixelFormat {
 }
 
 impl PixelFormat {
-    pub fn read<R: Read>(r: &mut R) -> Result<PixelFormat>
+    pub fn read<R: Read>(r: &mut R) -> Result<PixelFormat, Error>
     {
         let size = r.read_u32::<LittleEndian>()?;
         if size != 32 {
-            return Err(ErrorKind::InvalidField("Pixel format struct size".to_owned()).into());
+            return Err(Error::InvalidField("Pixel format struct size".to_owned()));
         }
         let flags = PixelFormatFlags::from_bits_truncate(
             r.read_u32::<LittleEndian>()?
@@ -114,7 +114,7 @@ impl PixelFormat {
         })
     }
 
-    pub fn write<W: Write>(&self, w: &mut W) -> Result<()>
+    pub fn write<W: Write>(&self, w: &mut W) -> Result<(), Error>
     {
         w.write_u32::<LittleEndian>(self.size)?;
         w.write_u32::<LittleEndian>(self.flags.bits())?;

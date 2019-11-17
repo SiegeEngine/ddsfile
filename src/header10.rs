@@ -20,12 +20,12 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-use errors::*;
+use crate::error::*;
 use std::io::{Read, Write};
 use std::fmt;
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 use enum_primitive::FromPrimitive;
-use format::DxgiFormat;
+use crate::format::DxgiFormat;
 
 enum_from_primitive! {
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -92,7 +92,7 @@ impl Header10 {
         }
     }
 
-    pub fn read<R: Read>(r: &mut R) -> Result<Header10>
+    pub fn read<R: Read>(r: &mut R) -> Result<Header10, Error>
     {
         let dxgi_format = r.read_u32::<LittleEndian>()?;
         let resource_dimension = r.read_u32::<LittleEndian>()?;
@@ -102,18 +102,18 @@ impl Header10 {
         let array_size = r.read_u32::<LittleEndian>()?;
         let alpha_mode = r.read_u32::<LittleEndian>()?;
 
-        let dxgi_format_result: Result<DxgiFormat> =
+        let dxgi_format_result: Result<DxgiFormat, Error> =
             DxgiFormat::from_u32(dxgi_format).ok_or(
-                ErrorKind::InvalidField("dxgi_format".to_owned()).into()
+                Error::InvalidField("dxgi_format".to_owned())
             );
-        let resource_dimension_result: Result<D3D10ResourceDimension> =
+        let resource_dimension_result: Result<D3D10ResourceDimension, Error> =
             D3D10ResourceDimension::from_u32(resource_dimension).ok_or(
-                ErrorKind::InvalidField("resource_dimension".to_owned()).into()
+                Error::InvalidField("resource_dimension".to_owned())
             );
 
-        let alpha_mode: Result<AlphaMode> =
+        let alpha_mode: Result<AlphaMode, Error> =
             AlphaMode::from_u32(alpha_mode).ok_or(
-                ErrorKind::InvalidField("alpha mode (misc_flags2)".to_owned()).into()
+                Error::InvalidField("alpha mode (misc_flags2)".to_owned())
             );
 
         Ok(Header10 {
@@ -125,7 +125,7 @@ impl Header10 {
         })
     }
 
-    pub fn write<W: Write>(&self, w: &mut W) -> Result<()>
+    pub fn write<W: Write>(&self, w: &mut W) -> Result<(), Error>
     {
         w.write_u32::<LittleEndian>(self.dxgi_format as u32)?;
         w.write_u32::<LittleEndian>(self.resource_dimension as u32)?;

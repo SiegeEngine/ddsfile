@@ -24,17 +24,14 @@
 
 #[macro_use]
 extern crate bitflags;
-extern crate byteorder;
 #[macro_use]
 extern crate enum_primitive;
-#[macro_use]
-extern crate error_chain;
 
 //#[cfg(test)]
 //mod tests;
 
-mod errors;
-pub use errors::*;
+mod error;
+pub use error::*;
 
 mod format;
 pub use format::{DxgiFormat, D3DFormat, DataFormat, PixelFormat, PixelFormatFlags, FourCC};
@@ -62,20 +59,20 @@ impl Dds {
 
     /// Create a new DirectDraw Surface with a D3DFormat
     pub fn new_d3d(height: u32, width: u32, depth: Option<u32>, format: D3DFormat,
-                   mipmap_levels: Option<u32>, caps2: Option<Caps2>) -> Result<Dds>
+                   mipmap_levels: Option<u32>, caps2: Option<Caps2>) -> Result<Dds, Error>
     {
         let size = match get_texture_size(format.get_pitch(width), None,
                                           format.get_pitch_height(),
                                           height, depth)
         {
             Some(s) => s,
-            None => return Err(ErrorKind::UnsupportedFormat.into()),
+            None => return Err(Error::UnsupportedFormat),
         };
 
         let mml = mipmap_levels.unwrap_or(1);
         let min_mipmap_size = match format.get_minimum_mipmap_size_in_bytes() {
             Some(mms) => mms,
-            None => return Err(ErrorKind::UnsupportedFormat.into()),
+            None => return Err(Error::UnsupportedFormat),
         };
         let array_stride = get_array_stride(size, min_mipmap_size, mml);
 
@@ -96,7 +93,7 @@ impl Dds {
                     caps2: Option<Caps2>, is_cubemap: bool,
                     resource_dimension: D3D10ResourceDimension,
                     alpha_mode: AlphaMode)
-                    -> Result<Dds>
+                    -> Result<Dds, Error>
     {
         let arraysize = match array_layers {
             Some(s) => s,
@@ -108,13 +105,13 @@ impl Dds {
                                           height, depth)
         {
             Some(s) => s,
-            None => return Err(ErrorKind::UnsupportedFormat.into()),
+            None => return Err(Error::UnsupportedFormat),
         };
 
         let mml = mipmap_levels.unwrap_or(1);
         let min_mipmap_size = match format.get_minimum_mipmap_size_in_bytes() {
             Some(mms) => mms,
-            None => return Err(ErrorKind::UnsupportedFormat.into()),
+            None => return Err(Error::UnsupportedFormat),
         };
         let array_stride = get_array_stride(size, min_mipmap_size, mml);
 
@@ -133,10 +130,10 @@ impl Dds {
     }
 
     /// Read a DDS file
-    pub fn read<R: Read>(r: &mut R) -> Result<Dds> {
+    pub fn read<R: Read>(r: &mut R) -> Result<Dds, Error> {
         let magic = r.read_u32::<LittleEndian>()?;
         if magic != Self::MAGIC {
-            return Err(ErrorKind::BadMagicNumber.into());
+            return Err(Error::BadMagicNumber);
         }
 
         let header = Header::read(r)?;
@@ -157,7 +154,7 @@ impl Dds {
     }
 
     /// Write to a DDS file
-    pub fn write<W: Write>(&self, w: &mut W) -> Result<()> {
+    pub fn write<W: Write>(&self, w: &mut W) -> Result<(), Error> {
         w.write_u32::<LittleEndian>(Self::MAGIC)?;
         self.header.write(w)?;
         if let Some(ref header10) = self.header10 {
@@ -264,11 +261,11 @@ impl Dds {
             self.header.height, self.header.depth)
     }
 
-    pub fn get_array_stride(&self) -> Result<u32>
+    pub fn get_array_stride(&self) -> Result<u32, Error>
     {
         let size = match self.get_main_texture_size() {
             Some(s) => s,
-            None => return Err(ErrorKind::UnsupportedFormat.into()),
+            None => return Err(Error::UnsupportedFormat),
         };
         let mml = self.get_num_mipmap_levels();
         let min_mipmap_size = self.get_min_mipmap_size_in_bytes();
@@ -307,32 +304,32 @@ impl Dds {
     /// This gets a reference to the data at the given `array_layer` (which should be
     /// 0 for textures with just one image).
     pub fn get_data<'a>(&'a self, array_layer: u32)
-                        -> Result<&'a[u8]>
+                        -> Result<&'a[u8], Error>
     {
         let (offset,size) = self.get_offset_and_size(array_layer)?;
         let offset = offset as usize;
         let size = size as usize;
         self.data.get(offset .. offset+size).ok_or(
-            ErrorKind::OutOfBounds.into())
+            Error::OutOfBounds)
     }
 
     /// This gets a reference to the data at the given `array_layer` (which should be
     /// 0 for textures with just one image).
     pub fn get_mut_data<'a>(&'a mut self, array_layer: u32)
-                            -> Result<&'a mut [u8]>
+                            -> Result<&'a mut [u8], Error>
     {
         let (offset,size) = self.get_offset_and_size(array_layer)?;
         let offset = offset as usize;
         let size = size as usize;
         self.data.get_mut(offset .. offset+size).ok_or(
-            ErrorKind::OutOfBounds.into())
+            Error::OutOfBounds)
     }
 
-    fn get_offset_and_size(&self, array_layer: u32) -> Result<(u32, u32)>
+    fn get_offset_and_size(&self, array_layer: u32) -> Result<(u32, u32), Error>
     {
         // Verify request bounds
         if array_layer >= self.get_num_array_layers() {
-            return Err(ErrorKind::OutOfBounds.into());
+            return Err(Error::OutOfBounds);
         }
         let array_stride = self.get_array_stride()?;
         let offset = array_layer * array_stride;
