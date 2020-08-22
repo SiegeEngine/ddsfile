@@ -130,16 +130,16 @@ impl Dds {
     }
 
     /// Read a DDS file
-    pub fn read<R: Read>(r: &mut R) -> Result<Dds, Error> {
+    pub fn read<R: Read>(mut r: R) -> Result<Dds, Error> {
         let magic = r.read_u32::<LittleEndian>()?;
         if magic != Self::MAGIC {
             return Err(Error::BadMagicNumber);
         }
 
-        let header = Header::read(r)?;
+        let header = Header::read(&mut r)?;
 
         let header10 = if header.spf.fourcc == Some(FourCC(<FourCC>::DX10)) {
-            Some(Header10::read(r)?)
+            Some(Header10::read(&mut r)?)
         } else {
             None
         };

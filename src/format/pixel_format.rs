@@ -59,7 +59,7 @@ pub struct PixelFormat {
 }
 
 impl PixelFormat {
-    pub fn read<R: Read>(r: &mut R) -> Result<PixelFormat, Error>
+    pub fn read<R: Read>(mut r: R) -> Result<PixelFormat, Error>
     {
         let size = r.read_u32::<LittleEndian>()?;
         if size != 32 {
