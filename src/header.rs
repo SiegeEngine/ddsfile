@@ -203,7 +203,7 @@ impl Header {
         Ok(header)
     }
 
-    pub fn read<R: Read>(r: &mut R) -> Result<Header, Error>
+    pub fn read<R: Read>(mut r: R) -> Result<Header, Error>
     {
         let size = r.read_u32::<LittleEndian>()?;
         if size != 124 {
@@ -219,7 +219,7 @@ impl Header {
         let mip_map_count = r.read_u32::<LittleEndian>()?;
         let mut reserved1 = [0_u32; 11];
         r.read_u32_into::<LittleEndian>(&mut reserved1)?;
-        let spf = PixelFormat::read(r)?;
+        let spf = PixelFormat::read(&mut r)?;
         let caps = r.read_u32::<LittleEndian>()?;
         let caps2 = r.read_u32::<LittleEndian>()?;
         let caps3 = r.read_u32::<LittleEndian>()?;

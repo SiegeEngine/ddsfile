@@ -92,7 +92,7 @@ impl Header10 {
         }
     }
 
-    pub fn read<R: Read>(r: &mut R) -> Result<Header10, Error>
+    pub fn read<R: Read>(mut r: R) -> Result<Header10, Error>
     {
         let dxgi_format = r.read_u32::<LittleEndian>()?;
         let resource_dimension = r.read_u32::<LittleEndian>()?;
