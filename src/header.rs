@@ -138,10 +138,12 @@ impl Header {
             None => return Err(Error::UnsupportedFormat),
         };
 
+        let depth = depth.unwrap_or(1);
+
         if compressed {
             header.flags = header.flags | HeaderFlags::LINEARSIZE;
             header.linear_size = Some(
-                pitch * height / format.get_pitch_height()
+                pitch * height * depth / format.get_pitch_height()
             );
         } else {
             header.flags = header.flags | HeaderFlags::PITCH;
@@ -192,10 +194,12 @@ impl Header {
             None => return Err(Error::UnsupportedFormat),
         };
 
+        let depth = depth.unwrap_or(1);
+
         if compressed {
             header.flags = header.flags | HeaderFlags::LINEARSIZE;
             header.linear_size = Some(
-                pitch * height / format.get_pitch_height()
+                pitch * height * depth / format.get_pitch_height()
             );
         } else {
             header.flags = header.flags | HeaderFlags::PITCH;
