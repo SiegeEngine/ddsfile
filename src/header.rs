@@ -123,6 +123,7 @@ impl Header {
         if let Some(d) = depth {
             if d > 1 {
                 header.caps.insert(Caps::COMPLEX);
+                header.flags |= HeaderFlags::DEPTH;
             }
         }
 
@@ -171,6 +172,7 @@ impl Header {
         if let Some(d) = depth {
             if d > 1 {
                 header.caps.insert(Caps::COMPLEX);
+                header.flags |= HeaderFlags::DEPTH;
             }
         }
         if let Some(al) = array_layers {
