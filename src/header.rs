@@ -117,6 +117,7 @@ impl Header {
 
         if let Some(mml) = mipmap_levels {
             if mml > 1 {
+                header.flags.insert(HeaderFlags::MIPMAPCOUNT);
                 header.caps.insert(Caps::COMPLEX | Caps::MIPMAP);
             }
         }
