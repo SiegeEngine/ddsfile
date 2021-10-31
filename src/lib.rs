@@ -61,8 +61,20 @@ impl Dds {
     pub fn new_d3d(height: u32, width: u32, depth: Option<u32>, format: D3DFormat,
                    mipmap_levels: Option<u32>, caps2: Option<Caps2>) -> Result<Dds, Error>
     {
+        let size = match get_texture_size(format.get_pitch(width), None,
+                                          format.get_pitch_height(),
+                                          height, depth)
+        {
+            Some(s) => s,
+            None => return Err(Error::UnsupportedFormat),
+        };
+
         let mml = mipmap_levels.unwrap_or(1);
-        let array_stride = get_array_stride(format, width, height, depth, mml)?;
+        let min_mipmap_size = match format.get_minimum_mipmap_size_in_bytes() {
+            Some(mms) => mms,
+            None => return Err(Error::UnsupportedFormat),
+        };
+        let array_stride = get_array_stride(size, min_mipmap_size, mml);
 
         let data_size = array_stride;
 
@@ -88,8 +100,20 @@ impl Dds {
             None => 1,
         };
 
+        let size = match get_texture_size(format.get_pitch(width), None,
+                                          format.get_pitch_height(),
+                                          height, depth)
+        {
+            Some(s) => s,
+            None => return Err(Error::UnsupportedFormat),
+        };
+
         let mml = mipmap_levels.unwrap_or(1);
-        let array_stride = get_array_stride(format, width, height, depth, mml)?;
+        let min_mipmap_size = match format.get_minimum_mipmap_size_in_bytes() {
+            Some(mms) => mms,
+            None => return Err(Error::UnsupportedFormat),
+        };
+        let array_stride = get_array_stride(size, min_mipmap_size, mml);
 
         let data_size = arraysize * array_stride;
 
@@ -239,16 +263,13 @@ impl Dds {
 
     pub fn get_array_stride(&self) -> Result<u32, Error>
     {
+        let size = match self.get_main_texture_size() {
+            Some(s) => s,
+            None => return Err(Error::UnsupportedFormat),
+        };
         let mml = self.get_num_mipmap_levels();
-        if let Some(dxgi) = self.get_dxgi_format() {
-            Ok(get_array_stride(dxgi, self.header.width, self.header.height,
-                                self.header.depth, mml)?)
-        } else if let Some(d3d) = self.get_d3d_format() {
-            Ok(get_array_stride(d3d, self.header.width, self.header.height,
-                                self.header.depth, mml)?)
-        } else {
-            Err(Error::UnsupportedFormat)
-        }
+        let min_mipmap_size = self.get_min_mipmap_size_in_bytes();
+        Ok(get_array_stride(size, min_mipmap_size, mml))
     }
 
     pub fn get_num_array_layers(&self) -> u32 {
@@ -335,22 +356,21 @@ fn get_texture_size(pitch: Option<u32>, linear_size: Option<u32>, pitch_height: 
     }
 }
 
-fn get_array_stride<F: DataFormat>(format: F, width: u32, height: u32,
-                                   depth: Option<u32>, mipmap_levels: u32)
-                                   -> Result<u32, Error>
+fn get_array_stride(texture_size: u32,
+                    min_mipmap_size: u32,
+                    mipmap_levels: u32)
+                    -> u32
 {
     let mut stride: u32 = 0;
-    for mipmap_level in 0..mipmap_levels {
-        let mipmap_width = width >> mipmap_level;
-        let mipmap_height = height >> mipmap_level;
-
-        let size = get_texture_size(format.get_pitch(mipmap_width), None,
-                                    format.get_pitch_height(),
-                                    mipmap_height, depth);
-
-        stride += size.ok_or(Error::UnsupportedFormat)?;
+    let mut current_mipsize: u32 = texture_size;
+    for _ in 0..mipmap_levels {
+        stride += current_mipsize;
+        current_mipsize /= 4;
+        if current_mipsize < min_mipmap_size {
+            current_mipsize = min_mipmap_size;
+        }
     }
-    Ok(stride)
+    stride
 }
 
 impl fmt::Debug for Dds {
