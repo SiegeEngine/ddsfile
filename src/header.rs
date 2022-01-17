@@ -19,7 +19,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-
+ 
 use crate::error::*;
 use std::io::{Read, Write};
 use std::fmt;
@@ -169,6 +169,7 @@ impl Header {
 
         if let Some(mml) = mipmap_levels {
             if mml > 1 {
+                header.flags.insert(HeaderFlags::MIPMAPCOUNT);
                 header.caps.insert(Caps::COMPLEX | Caps::MIPMAP);
             }
         }
