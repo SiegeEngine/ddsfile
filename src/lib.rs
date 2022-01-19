@@ -54,23 +54,47 @@ pub struct Dds {
     pub data: Vec<u8>,
 }
 
+/// Parameters for Dds::new_d3d()
+pub struct NewD3dParams {
+    pub height: u32,
+    pub width: u32,
+    pub depth: Option<u32>,
+    pub format: D3DFormat,
+    pub mipmap_levels: Option<u32>,
+    pub caps2: Option<Caps2>,
+}
+
+/// Parameters for Dds::new_dxgi()
+pub struct NewDxgiParams {
+    pub height: u32,
+    pub width: u32,
+    pub depth: Option<u32>,
+    pub format: DxgiFormat,
+    pub mipmap_levels: Option<u32>,
+    pub array_layers: Option<u32>,
+    pub caps2: Option<Caps2>,
+    pub is_cubemap: bool,
+    pub resource_dimension: D3D10ResourceDimension,
+    pub alpha_mode: AlphaMode
+}
+
 impl Dds {
     const MAGIC: u32 = 0x20534444; // b"DDS " in little endian
 
     /// Create a new DirectDraw Surface with a D3DFormat
-    pub fn new_d3d(height: u32, width: u32, depth: Option<u32>, format: D3DFormat,
-                   mipmap_levels: Option<u32>, caps2: Option<Caps2>) -> Result<Dds, Error>
+    pub fn new_d3d(params: NewD3dParams) -> Result<Dds, Error>
     {
-        let size = match get_texture_size(format.get_pitch(width), None,
-                                          format.get_pitch_height(),
-                                          height, depth)
+        let size = match get_texture_size(params.format.get_pitch(params.width),
+                                          None,
+                                          params.format.get_pitch_height(),
+                                          params.height, params.depth)
         {
             Some(s) => s,
             None => return Err(Error::UnsupportedFormat),
         };
 
-        let mml = mipmap_levels.unwrap_or(1);
-        let min_mipmap_size = match format.get_minimum_mipmap_size_in_bytes() {
+        let mml = params.mipmap_levels.unwrap_or(1);
+        let min_mipmap_size = match params.format.get_minimum_mipmap_size_in_bytes() {
             Some(mms) => mms,
             None => return Err(Error::UnsupportedFormat),
         };
@@ -79,34 +103,33 @@ impl Dds {
         let data_size = array_stride;
 
         Ok(Dds {
-            header: Header::new_d3d(height, width, depth, format, mipmap_levels,
-                                    caps2)?,
+            header: Header::new_d3d(params.height,
+                                    params.width,
+                                    params.depth,
+                                    params.format,
+                                    params.mipmap_levels,
+                                    params.caps2)?,
             header10: None,
             data: vec![0; data_size as usize],
         })
     }
 
     /// Create a new DirectDraw Surface with a DxgiFormat
-    pub fn new_dxgi(height: u32, width: u32, depth: Option<u32>,
-                    format: DxgiFormat,
-                    mipmap_levels: Option<u32>, array_layers: Option<u32>,
-                    caps2: Option<Caps2>, is_cubemap: bool,
-                    resource_dimension: D3D10ResourceDimension,
-                    alpha_mode: AlphaMode)
-                    -> Result<Dds, Error>
+    pub fn new_dxgi(params: NewDxgiParams)  -> Result<Dds, Error>
     {
-        let arraysize = array_layers.unwrap_or(1);
+        let arraysize = params.array_layers.unwrap_or(1);
 
-        let size = match get_texture_size(format.get_pitch(width), None,
-                                          format.get_pitch_height(),
-                                          height, depth)
+        let size = match get_texture_size(params.format.get_pitch(params.width),
+                                          None,
+                                          params.format.get_pitch_height(),
+                                          params.height, params.depth)
         {
             Some(s) => s,
             None => return Err(Error::UnsupportedFormat),
         };
 
-        let mml = mipmap_levels.unwrap_or(1);
-        let min_mipmap_size = match format.get_minimum_mipmap_size_in_bytes() {
+        let mml = params.mipmap_levels.unwrap_or(1);
+        let min_mipmap_size = match params.format.get_minimum_mipmap_size_in_bytes() {
             Some(mms) => mms,
             None => return Err(Error::UnsupportedFormat),
         };
@@ -114,14 +137,18 @@ impl Dds {
 
         let data_size = arraysize * array_stride;
 
-        let arraysize = if is_cubemap { arraysize / 6 }  else { arraysize };
+        let arraysize = if params.is_cubemap { arraysize / 6 }  else { arraysize };
         let header10 = Header10::new(
-            format, is_cubemap, resource_dimension,
-            arraysize, alpha_mode);
+            params.format,
+            params.is_cubemap,
+            params.resource_dimension,
+            arraysize,
+            params.alpha_mode);
 
         Ok(Dds {
-            header: Header::new_dxgi(height, width, depth, format, mipmap_levels,
-                                     array_layers, caps2)?,
+            header: Header::new_dxgi(params.height, params.width, params.depth,
+                                     params.format, params.mipmap_levels,
+                                     params.array_layers, params.caps2)?,
             header10: Some(header10),
             data: vec![0; data_size as usize],
         })
