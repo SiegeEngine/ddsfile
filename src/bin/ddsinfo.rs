@@ -6,7 +6,7 @@ use std::fs::File;
 use std::env;
 
 fn main() {
-    let filename = match env::args().skip(1).next() {
+    let filename = match env::args().nth(1) {
         Some(arg) => arg,
         None => panic!("Usage: ddsinfo <filename>"),
     };

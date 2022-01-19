@@ -95,10 +95,7 @@ impl Dds {
                     alpha_mode: AlphaMode)
                     -> Result<Dds, Error>
     {
-        let arraysize = match array_layers {
-            Some(s) => s,
-            None => 1,
-        };
+        let arraysize = array_layers.unwrap_or(1);
 
         let size = match get_texture_size(format.get_pitch(width), None,
                                           format.get_pitch_height(),
@@ -148,9 +145,9 @@ impl Dds {
         let mut data: Vec<u8> = Vec::new();
         r.read_to_end(&mut data)?;
         Ok(Dds {
-            header: header,
-            header10: header10,
-            data: data
+            header,
+            header10,
+            data,
         })
     }
 
@@ -304,8 +301,8 @@ impl Dds {
 
     /// This gets a reference to the data at the given `array_layer` (which should be
     /// 0 for textures with just one image).
-    pub fn get_data<'a>(&'a self, array_layer: u32)
-                        -> Result<&'a[u8], Error>
+    pub fn get_data(&self, array_layer: u32)
+                    -> Result<&[u8], Error>
     {
         let (offset,size) = self.get_offset_and_size(array_layer)?;
         let offset = offset as usize;
@@ -316,8 +313,8 @@ impl Dds {
 
     /// This gets a reference to the data at the given `array_layer` (which should be
     /// 0 for textures with just one image).
-    pub fn get_mut_data<'a>(&'a mut self, array_layer: u32)
-                            -> Result<&'a mut [u8], Error>
+    pub fn get_mut_data(&mut self, array_layer: u32)
+                        -> Result<&mut [u8], Error>
     {
         let (offset,size) = self.get_offset_and_size(array_layer)?;
         let offset = offset as usize;

@@ -63,10 +63,8 @@ pub trait DataFormat {
     fn get_minimum_mipmap_size_in_bytes(&self) -> Option<u32> {
         if let Some(bpp) = self.get_bits_per_pixel() {
             Some((bpp as u32 + 7) / 8)
-        } else if let Some(bs) = self.get_block_size() {
-            Some(bs)
         } else {
-            return None; // we don't have enough information
+            self.get_block_size()
         }
     }
 }

@@ -10,12 +10,12 @@ use std::io::{Seek, SeekFrom};
 use std::env;
 
 fn main() {
-    let filename = match env::args().skip(1).next() {
+    let filename = match env::args().nth(1) {
         Some(arg) => arg,
         None => panic!("Usage: retag <ddsfile> <format>"),
     };
 
-    let tag = match env::args().skip(2).next() {
+    let tag = match env::args().nth(2) {
         Some(arg) => arg,
         None => panic!("Usage: retag <ddsfile> <format>"),
     };

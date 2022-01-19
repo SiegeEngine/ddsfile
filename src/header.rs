@@ -107,13 +107,14 @@ impl Header {
                    mipmap_levels: Option<u32>, caps2: Option<Caps2>)
                    -> Result<Header, Error>
     {
-        let mut header: Header = Default::default();
-
-        header.height = height;
-        header.width = width;
-        header.mip_map_count = mipmap_levels;
-        header.depth = depth;
-        header.spf = From::from(format);
+        let mut header: Header = Header {
+            height,
+            width,
+            mip_map_count: mipmap_levels,
+            depth,
+            spf: From::from(format),
+            ..Default::default()
+        };
 
         if let Some(mml) = mipmap_levels {
             if mml > 1 {
@@ -142,12 +143,12 @@ impl Header {
         let depth = depth.unwrap_or(1);
 
         if compressed {
-            header.flags = header.flags | HeaderFlags::LINEARSIZE;
+            header.flags |= HeaderFlags::LINEARSIZE;
             header.linear_size = Some(
                 pitch * height * depth / format.get_pitch_height()
             );
         } else {
-            header.flags = header.flags | HeaderFlags::PITCH;
+            header.flags |= HeaderFlags::PITCH;
             header.pitch = Some(pitch);
         }
 
@@ -159,13 +160,14 @@ impl Header {
                     caps2: Option<Caps2>)
                     -> Result<Header, Error>
     {
-        let mut header: Header = Default::default();
-
-        header.height = height;
-        header.width = width;
-        header.mip_map_count = mipmap_levels;
-        header.depth = depth;
-        header.spf = From::from(format);
+        let mut header: Header = Header {
+            height,
+            width,
+            mip_map_count: mipmap_levels,
+            depth,
+            spf: From::from(format),
+            .. Default::default()
+        };
 
         if let Some(mml) = mipmap_levels {
             if mml > 1 {
@@ -199,12 +201,12 @@ impl Header {
         let depth = depth.unwrap_or(1);
 
         if compressed {
-            header.flags = header.flags | HeaderFlags::LINEARSIZE;
+            header.flags |= HeaderFlags::LINEARSIZE;
             header.linear_size = Some(
                 pitch * height * depth / format.get_pitch_height()
             );
         } else {
-            header.flags = header.flags | HeaderFlags::PITCH;
+            header.flags |= HeaderFlags::PITCH;
             header.pitch = Some(pitch);
         }
 
@@ -234,10 +236,10 @@ impl Header {
         let caps4 = r.read_u32::<LittleEndian>()?;
         let reserved2 = r.read_u32::<LittleEndian>()?;
         Ok(Header {
-            size: size,
-            flags: flags,
-            height: height,
-            width: width,
+            size,
+            flags,
+            height,
+            width,
             pitch: if flags.contains(HeaderFlags::PITCH) {
                 Some(pitch_or_linear_size)
             } else {
@@ -258,13 +260,13 @@ impl Header {
             } else {
                 None
             },
-            reserved1: reserved1,
-            spf: spf,
+            reserved1,
+            spf,
             caps: Caps::from_bits_truncate(caps),
             caps2: Caps2::from_bits_truncate(caps2),
-            caps3: caps3,
-            caps4: caps4,
-            reserved2: reserved2,
+            caps3,
+            caps4,
+            reserved2,
         })
     }
 

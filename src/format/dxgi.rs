@@ -164,11 +164,8 @@ impl DataFormat for DxgiFormat {
         if let Some(bpp) = self.get_bits_per_pixel() {
             Some((width * bpp as u32 + 7) / 8)
         }
-        else if let Some(bs) = self.get_block_size() {
-            Some(1.max((width + 3)/4) * bs)
-        }
         else {
-            None
+            self.get_block_size().map(|bs| 1.max((width + 3)/4) * bs)
         }
     }
 
@@ -363,7 +360,8 @@ impl DataFormat for DxgiFormat {
 
     // sRGB, float, and compressed, and larger than u32, will all yield None.
     fn requires_extension(&self) -> bool {
-        match *self {
+        matches!(
+            *self,
             // Too big, and many are also not maskable types
             DxgiFormat::R32G32B32A32_Typeless |
             DxgiFormat::R32G32B32A32_Float |
@@ -386,9 +384,7 @@ impl DataFormat for DxgiFormat {
             DxgiFormat::R32G8X24_Typeless |
             DxgiFormat::D32_Float_S8X24_UInt |
             DxgiFormat::R32_Float_X8X24_Typeless |
-            DxgiFormat::X32_Typeless_G8X24_UInt
-                => true,
-
+            DxgiFormat::X32_Typeless_G8X24_UInt |
             // Not maskable types
             DxgiFormat::R10G10B10A2_Typeless |
             DxgiFormat::R11G11B10_Float |
@@ -400,29 +396,20 @@ impl DataFormat for DxgiFormat {
             DxgiFormat::D32_Float |
             DxgiFormat::R32_Float |
             DxgiFormat::R24G8_Typeless |
-            DxgiFormat::R24_UNorm_X8_Typeless
-                => true,
-
-            // Not maskable types
+            DxgiFormat::R24_UNorm_X8_Typeless |
             DxgiFormat::R8G8_Typeless |
             DxgiFormat::R16_Typeless |
-            DxgiFormat::R16_Float
-                => true,
-
+            DxgiFormat::R16_Float |
             // Not maskable types
-            DxgiFormat::R8_Typeless => true,
-
+            DxgiFormat::R8_Typeless |
             // Not maskable types
-            DxgiFormat::R9G9B9E5_SharedExp => true,
-
+            DxgiFormat::R9G9B9E5_SharedExp |
             // Not maskable types
             DxgiFormat::R10G10B10_XR_Bias_A2_UNorm |
             DxgiFormat::B8G8R8A8_Typeless |
             DxgiFormat::B8G8R8A8_UNorm_sRGB |
             DxgiFormat::B8G8R8X8_Typeless |
-            DxgiFormat::B8G8R8X8_UNorm_sRGB
-                => true,
-
+            DxgiFormat::B8G8R8X8_UNorm_sRGB |
             // Channels are not actual rgb
             DxgiFormat::AYUV |
             DxgiFormat::Y410 |
@@ -442,10 +429,7 @@ impl DataFormat for DxgiFormat {
             DxgiFormat::P208 |
             DxgiFormat::V208 |
             DxgiFormat::V408
-                => true,
-
-            _ => false
-        }
+        )
     }
 }
 

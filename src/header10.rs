@@ -81,14 +81,14 @@ impl Header10 {
     {
         let mut flags = MiscFlag::empty();
         if is_cubemap {
-            flags = flags | MiscFlag::TEXTURECUBE
+            flags |= MiscFlag::TEXTURECUBE
         };
         Header10 {
             dxgi_format: format,
-            resource_dimension: resource_dimension,
+            resource_dimension,
             misc_flag: flags,
-            array_size: array_size,
-            alpha_mode: alpha_mode,
+            array_size,
+            alpha_mode,
         }
     }
 
@@ -103,24 +103,24 @@ impl Header10 {
         let alpha_mode = r.read_u32::<LittleEndian>()?;
 
         let dxgi_format_result: Result<DxgiFormat, Error> =
-            DxgiFormat::from_u32(dxgi_format).ok_or(
-                Error::InvalidField("dxgi_format".to_owned())
+            DxgiFormat::from_u32(dxgi_format).ok_or_else(
+                || Error::InvalidField("dxgi_format".to_owned())
             );
         let resource_dimension_result: Result<D3D10ResourceDimension, Error> =
-            D3D10ResourceDimension::from_u32(resource_dimension).ok_or(
-                Error::InvalidField("resource_dimension".to_owned())
+            D3D10ResourceDimension::from_u32(resource_dimension).ok_or_else(
+                || Error::InvalidField("resource_dimension".to_owned())
             );
 
         let alpha_mode: Result<AlphaMode, Error> =
-            AlphaMode::from_u32(alpha_mode).ok_or(
-                Error::InvalidField("alpha mode (misc_flags2)".to_owned())
+            AlphaMode::from_u32(alpha_mode).ok_or_else(
+                || Error::InvalidField("alpha mode (misc_flags2)".to_owned())
             );
 
         Ok(Header10 {
             dxgi_format: dxgi_format_result?,
             resource_dimension: resource_dimension_result?,
-            misc_flag: misc_flag,
-            array_size: array_size,
+            misc_flag,
+            array_size,
             alpha_mode: alpha_mode?,
         })
     }

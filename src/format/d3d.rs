@@ -80,11 +80,8 @@ impl DataFormat for D3DFormat {
         if let Some(bpp) = self.get_bits_per_pixel() {
             Some((width * bpp as u32 + 7) / 8)
         }
-        else if let Some(bs) = self.get_block_size() {
-            Some(1.max((width + 3)/4) * bs)
-        }
         else {
-            None
+            self.get_block_size().map(|bs| 1.max((width + 3)/4) * bs)
         }
     }
 

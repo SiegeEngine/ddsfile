@@ -75,8 +75,8 @@ impl PixelFormat {
         let b_bit_mask = r.read_u32::<LittleEndian>()?;
         let a_bit_mask = r.read_u32::<LittleEndian>()?;
         Ok(PixelFormat {
-            size: size,
-            flags: flags,
+            size,
+            flags,
             fourcc: if flags.contains(PixelFormatFlags::FOURCC) {
                 Some(FourCC(fourcc))
             } else {
