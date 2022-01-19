@@ -1,6 +1,6 @@
 [package]
 name = "ddsfile"
-version = "0.5.0-unstable"
+version = "0.5.0"
 authors = ["Mike Dilger <mike@optcomp.nz>"]
 description = "DirectDraw Surface file format parser/composer"
 repository = "https://github.com/SiegeEngine/ddsfile"
