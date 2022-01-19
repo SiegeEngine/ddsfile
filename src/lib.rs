@@ -117,6 +117,7 @@ impl Dds {
 
         let data_size = arraysize * array_stride;
 
+        let arraysize = if is_cubemap { arraysize / 6 }  else { arraysize };
         let header10 = Header10::new(
             format, is_cubemap, resource_dimension,
             arraysize, alpha_mode);
