@@ -245,7 +245,7 @@ impl D3DFormat {
     /// This gets the bitmask for the blue channel pixels
     pub fn b_bit_mask(&self) -> Option<u32> {
         match *self {
-            D3DFormat::A8B8G8R8 => Some(0x00ff_00000),
+            D3DFormat::A8B8G8R8 => Some(0x00ff_0000),
             D3DFormat::G16R16 => None,
             D3DFormat::A2B10G10R10 => Some(0x3ff0_0000),
             D3DFormat::A1R5G5B5 => Some(0x001f),
