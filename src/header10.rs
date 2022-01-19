@@ -42,7 +42,7 @@ enum_from_primitive! {
 pub struct Header10 {
     pub dxgi_format: DxgiFormat,
     pub resource_dimension: D3D10ResourceDimension,
-    misc_flag: MiscFlag,
+    pub misc_flag: MiscFlag,
     pub array_size: u32,
     /// This is called misc_flags2 in the official documentation
     pub alpha_mode: AlphaMode,
