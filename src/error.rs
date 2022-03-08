@@ -43,7 +43,9 @@ impl fmt::Display for Error {
             Error::BadMagicNumber => write!(f, "Bad Magic Number"),
             Error::InvalidField(ref s) => write!(f, "Invalid Field: {}", s),
             Error::ShortFile => write!(f, "File is cut short"),
-            Error::UnsupportedFormat => write!(f, "Format is not supported well enough for this operation"),
+            Error::UnsupportedFormat => {
+                write!(f, "Format is not supported well enough for this operation")
+            }
             Error::OutOfBounds => write!(f, "Request is out of bounds"),
         }
     }

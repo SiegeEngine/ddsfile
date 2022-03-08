@@ -19,12 +19,12 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
- 
+
 use crate::error::*;
-use std::io::{Read, Write};
-use std::fmt;
+use crate::{D3DFormat, DataFormat, DxgiFormat, PixelFormat};
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
-use crate::{PixelFormat, D3DFormat, DxgiFormat, DataFormat};
+use std::fmt;
+use std::io::{Read, Write};
 
 #[derive(Clone)]
 pub struct Header {
@@ -83,7 +83,9 @@ impl Default for Header {
     fn default() -> Header {
         Header {
             size: 124, // must be 124
-            flags: HeaderFlags::CAPS | HeaderFlags::HEIGHT | HeaderFlags::WIDTH
+            flags: HeaderFlags::CAPS
+                | HeaderFlags::HEIGHT
+                | HeaderFlags::WIDTH
                 | HeaderFlags::PIXELFORMAT,
             height: 0,
             width: 0,
@@ -97,16 +99,20 @@ impl Default for Header {
             caps2: Caps2::empty(),
             caps3: 0,
             caps4: 0,
-            reserved2: 0
+            reserved2: 0,
         }
     }
 }
 
 impl Header {
-    pub fn new_d3d(height: u32, width: u32, depth: Option<u32>, format: D3DFormat,
-                   mipmap_levels: Option<u32>, caps2: Option<Caps2>)
-                   -> Result<Header, Error>
-    {
+    pub fn new_d3d(
+        height: u32,
+        width: u32,
+        depth: Option<u32>,
+        format: D3DFormat,
+        mipmap_levels: Option<u32>,
+        caps2: Option<Caps2>,
+    ) -> Result<Header, Error> {
         let mut header: Header = Header {
             height,
             width,
@@ -144,9 +150,7 @@ impl Header {
 
         if compressed {
             header.flags |= HeaderFlags::LINEARSIZE;
-            header.linear_size = Some(
-                pitch * height * depth / format.get_pitch_height()
-            );
+            header.linear_size = Some(pitch * height * depth / format.get_pitch_height());
         } else {
             header.flags |= HeaderFlags::PITCH;
             header.pitch = Some(pitch);
@@ -155,18 +159,22 @@ impl Header {
         Ok(header)
     }
 
-    pub fn new_dxgi(height: u32, width: u32, depth: Option<u32>, format: DxgiFormat,
-                    mipmap_levels: Option<u32>, array_layers: Option<u32>,
-                    caps2: Option<Caps2>)
-                    -> Result<Header, Error>
-    {
+    pub fn new_dxgi(
+        height: u32,
+        width: u32,
+        depth: Option<u32>,
+        format: DxgiFormat,
+        mipmap_levels: Option<u32>,
+        array_layers: Option<u32>,
+        caps2: Option<Caps2>,
+    ) -> Result<Header, Error> {
         let mut header: Header = Header {
             height,
             width,
             mip_map_count: mipmap_levels,
             depth,
             spf: From::from(format),
-            .. Default::default()
+            ..Default::default()
         };
 
         if let Some(mml) = mipmap_levels {
@@ -202,9 +210,7 @@ impl Header {
 
         if compressed {
             header.flags |= HeaderFlags::LINEARSIZE;
-            header.linear_size = Some(
-                pitch * height * depth / format.get_pitch_height()
-            );
+            header.linear_size = Some(pitch * height * depth / format.get_pitch_height());
         } else {
             header.flags |= HeaderFlags::PITCH;
             header.pitch = Some(pitch);
@@ -213,15 +219,12 @@ impl Header {
         Ok(header)
     }
 
-    pub fn read<R: Read>(mut r: R) -> Result<Header, Error>
-    {
+    pub fn read<R: Read>(mut r: R) -> Result<Header, Error> {
         let size = r.read_u32::<LittleEndian>()?;
         if size != 124 {
             return Err(Error::InvalidField("Header struct size".to_owned()));
         }
-        let flags = HeaderFlags::from_bits_truncate(
-            r.read_u32::<LittleEndian>()?
-        );
+        let flags = HeaderFlags::from_bits_truncate(r.read_u32::<LittleEndian>()?);
         let height = r.read_u32::<LittleEndian>()?;
         let width = r.read_u32::<LittleEndian>()?;
         let pitch_or_linear_size = r.read_u32::<LittleEndian>()?;
@@ -245,7 +248,7 @@ impl Header {
             } else {
                 None
             },
-            linear_size:  if flags.contains(HeaderFlags::LINEARSIZE) {
+            linear_size: if flags.contains(HeaderFlags::LINEARSIZE) {
                 Some(pitch_or_linear_size)
             } else {
                 None
@@ -270,8 +273,7 @@ impl Header {
         })
     }
 
-    pub fn write<W: Write>(&self, w: &mut W) -> Result<(), Error>
-    {
+    pub fn write<W: Write>(&self, w: &mut W) -> Result<(), Error> {
         w.write_u32::<LittleEndian>(self.size)?;
         w.write_u32::<LittleEndian>(self.flags.bits())?;
         w.write_u32::<LittleEndian>(self.height)?;
@@ -302,10 +304,16 @@ impl fmt::Debug for Header {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         writeln!(f, "  Header:")?;
         writeln!(f, "    flags: {:?}", self.flags)?;
-        writeln!(f, "    height: {:?}, width: {:?}, depth: {:?}",
-                 self.height, self.width, self.depth)?;
-        writeln!(f, "    pitch: {:?}  linear_size: {:?}",
-                 self.pitch, self.linear_size)?;
+        writeln!(
+            f,
+            "    height: {:?}, width: {:?}, depth: {:?}",
+            self.height, self.width, self.depth
+        )?;
+        writeln!(
+            f,
+            "    pitch: {:?}  linear_size: {:?}",
+            self.pitch, self.linear_size
+        )?;
         writeln!(f, "    mipmap_count: {:?}", self.mip_map_count)?;
         writeln!(f, "    caps: {:?}, caps2 {:?}", self.caps, self.caps2)?;
         write!(f, "{:?}", self.spf)?;

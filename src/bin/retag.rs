@@ -5,9 +5,9 @@ extern crate ddsfile;
 
 use ddsfile::*;
 
+use std::env;
 use std::fs::OpenOptions;
 use std::io::{Seek, SeekFrom};
-use std::env;
 
 fn main() {
     let filename = match env::args().nth(1) {
@@ -24,10 +24,13 @@ fn main() {
     let format: DxgiFormat = match &*tag {
         "BC7_UNorm" => DxgiFormat::BC7_UNorm,
         "BC7_UNorm_sRGB" => DxgiFormat::BC7_UNorm_sRGB,
-        _ => panic!("format not implemented")
+        _ => panic!("format not implemented"),
     };
 
-    let mut file = match OpenOptions::new().read(true).write(true).create(false)
+    let mut file = match OpenOptions::new()
+        .read(true)
+        .write(true)
+        .create(false)
         .open(&*filename)
     {
         Ok(f) => f,

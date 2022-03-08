@@ -20,7 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-use super::pixel_format::{PixelFormat, PixelFormatFlags, FourCC};
+use super::pixel_format::{FourCC, PixelFormat, PixelFormatFlags};
 use super::DataFormat;
 
 #[allow(non_camel_case_types)]
@@ -66,22 +66,19 @@ pub enum D3DFormat {
 }
 
 impl DataFormat for D3DFormat {
-    fn get_pitch(&self, width: u32) -> Option<u32>
-    {
+    fn get_pitch(&self, width: u32) -> Option<u32> {
         // see https://msdn.microsoft.com/en-us/library/bb943991.aspx
         match *self {
-            D3DFormat::R8G8_B8G8 |
-            D3DFormat::G8R8_G8B8 => {
-                return Some(((width+1)>>1) * 4);
-            },
+            D3DFormat::R8G8_B8G8 | D3DFormat::G8R8_G8B8 => {
+                return Some(((width + 1) >> 1) * 4);
+            }
             _ => {}
         };
 
         if let Some(bpp) = self.get_bits_per_pixel() {
             Some((width * bpp as u32 + 7) / 8)
-        }
-        else {
-            self.get_block_size().map(|bs| 1.max((width + 3)/4) * bs)
+        } else {
+            self.get_block_size().map(|bs| 1.max((width + 3) / 4) * bs)
         }
     }
 
@@ -130,11 +127,7 @@ impl DataFormat for D3DFormat {
     fn get_block_size(&self) -> Option<u32> {
         match *self {
             D3DFormat::DXT1 => Some(8),
-            D3DFormat::DXT2 |
-            D3DFormat::DXT3 |
-            D3DFormat::DXT4 |
-            D3DFormat::DXT5
-                => Some(16),
+            D3DFormat::DXT2 | D3DFormat::DXT3 | D3DFormat::DXT4 | D3DFormat::DXT5 => Some(16),
             _ => None,
         }
     }
@@ -293,9 +286,7 @@ impl D3DFormat {
 
     /// This attempts to use `PixelFormat` data (e.g. from the dds.header.spf field)
     /// to determine the `D3DFormat`.
-    pub fn try_from_pixel_format(pixel_format: &PixelFormat)
-                                 -> Option<D3DFormat>
-    {
+    pub fn try_from_pixel_format(pixel_format: &PixelFormat) -> Option<D3DFormat> {
         if let Some(ref fourcc) = pixel_format.fourcc {
             match fourcc.0 {
                 FourCC::DXT1 => Some(D3DFormat::DXT1),
@@ -316,38 +307,46 @@ impl D3DFormat {
                 FourCC::UYVY => Some(D3DFormat::UYVY),
                 FourCC::YUY2 => Some(D3DFormat::YUY2),
                 FourCC::CXV8U8 => Some(D3DFormat::CXV8U8),
-                FourCC::DX10 => None,// should use try_from_header10
+                FourCC::DX10 => None, // should use try_from_header10
                 _ => None,
             }
-        }
-        else {
+        } else {
             let rgb = pixel_format.flags.contains(PixelFormatFlags::RGB);
-            let alpha = pixel_format.flags.contains(PixelFormatFlags::ALPHA) ||
-                pixel_format.flags.contains(PixelFormatFlags::ALPHA_PIXELS);
+            let alpha = pixel_format.flags.contains(PixelFormatFlags::ALPHA)
+                || pixel_format.flags.contains(PixelFormatFlags::ALPHA_PIXELS);
             let lum = pixel_format.flags.contains(PixelFormatFlags::LUMINANCE);
-            match (lum, rgb, alpha, pixel_format.rgb_bit_count,
-                   pixel_format.r_bit_mask, pixel_format.g_bit_mask,
-                   pixel_format.b_bit_mask, pixel_format.a_bit_mask)
-            {
-                (false,  true,  true, Some(32), Some(      0xff), Some(    0xff00), Some(  0xff0000), Some(0xff000000)) => Some(D3DFormat::A8B8G8R8),
-                (false,  true, false, Some(32), Some(    0xffff), Some(0xffff0000), None,             None            ) => Some(D3DFormat::G16R16),
-                (false,  true,  true, Some(32), Some(     0x3ff), Some(   0xffc00), Some(0x3ff00000), None            ) => Some(D3DFormat::A2B10G10R10),
-                (false,  true,  true, Some(16), Some(    0x7c00), Some(     0x3e0), Some(      0x1f), Some(    0x8000)) => Some(D3DFormat::A1R5G5B5),
-                (false,  true, false, Some(16), Some(    0xf800), Some(     0x7e0), Some(      0x1f), None            ) => Some(D3DFormat::R5G6B5),
-                (false, false,  true, Some( 8), None,             None,             None,             Some(      0xff)) => Some(D3DFormat::A8),
-                (false,  true,  true, Some(32), Some(  0xff0000), Some(    0xff00), Some(      0xff), Some(0xff000000)) => Some(D3DFormat::A8R8G8B8),
-                (false,  true, false, Some(32), Some(  0xff0000), Some(    0xff00), Some(      0xff), None            ) => Some(D3DFormat::X8R8G8B8),
-                (false,  true, false, Some(32), Some(      0xff), Some(    0xff00), Some(  0xff0000), None            ) => Some(D3DFormat::X8B8G8R8),
-                (false,  true,  true, Some(32), Some(0x3ff00000), Some(   0xffc00), Some(     0x3ff), Some(0xc0000000)) => Some(D3DFormat::A2R10G10B10),
-                (false,  true, false, Some(24), Some(  0xff0000), Some(    0xff00), Some(      0xff), None            ) => Some(D3DFormat::R8G8B8),
-                (false,  true, false, Some(16), Some(    0x7c00), Some(     0x3e0), Some(      0x1f), None            ) => Some(D3DFormat::X1R5G5B5),
-                (false,  true,  true, Some(16), Some(     0xf00), Some(      0xf0), Some(       0xf), Some(    0xf000)) => Some(D3DFormat::A4R4G4B4),
-                (false,  true, false, Some(16), Some(     0xf00), Some(      0xf0), Some(       0xf), None            ) => Some(D3DFormat::X4R4G4B4),
-                (false,  true,  true, Some(16), Some(      0xe0), Some(      0x1c), Some(       0x3), Some(    0xff00)) => Some(D3DFormat::A8R3G3B2),
-                ( true, false,  true, Some(16), Some(      0xff), None,             None,             Some(    0xff00)) => Some(D3DFormat::A8L8),
-                ( true, false, false, Some(16), Some(    0xffff), None,             None,             None            ) => Some(D3DFormat::L16),
-                ( true, false, false, Some( 8), Some(      0xff), None,             None,             None            ) => Some(D3DFormat::L8),
-                ( true, false,  true, Some( 8), Some(       0xf), None,             None,             Some(      0xf0)) => Some(D3DFormat::A4L4),
+            match (
+                lum,
+                rgb,
+                alpha,
+                pixel_format.rgb_bit_count,
+                pixel_format.r_bit_mask,
+                pixel_format.g_bit_mask,
+                pixel_format.b_bit_mask,
+                pixel_format.a_bit_mask
+            ) {
+                // NOTE: The following block is intentionally not formatted according to rustfmt standards.
+                //       Please keep it this way as this is much easier to read.
+                // lum     rgb   alpha  rgb cnt         r bitmask         g bitmask         b bitmask         a bitmask
+                (  false,  true,  true, Some(32), Some(      0xff), Some(    0xff00), Some(  0xff0000), Some(0xff000000)) => Some(D3DFormat::A8B8G8R8),
+                (  false,  true, false, Some(32), Some(    0xffff), Some(0xffff0000), None,             None            ) => Some(D3DFormat::G16R16),
+                (  false,  true,  true, Some(32), Some(     0x3ff), Some(   0xffc00), Some(0x3ff00000), None            ) => Some(D3DFormat::A2B10G10R10),
+                (  false,  true,  true, Some(16), Some(    0x7c00), Some(     0x3e0), Some(      0x1f), Some(    0x8000)) => Some(D3DFormat::A1R5G5B5),
+                (  false,  true, false, Some(16), Some(    0xf800), Some(     0x7e0), Some(      0x1f), None            ) => Some(D3DFormat::R5G6B5),
+                (  false, false,  true, Some( 8), None,             None,             None,             Some(      0xff)) => Some(D3DFormat::A8),
+                (  false,  true,  true, Some(32), Some(  0xff0000), Some(    0xff00), Some(      0xff), Some(0xff000000)) => Some(D3DFormat::A8R8G8B8),
+                (  false,  true, false, Some(32), Some(  0xff0000), Some(    0xff00), Some(      0xff), None            ) => Some(D3DFormat::X8R8G8B8),
+                (  false,  true, false, Some(32), Some(      0xff), Some(    0xff00), Some(  0xff0000), None            ) => Some(D3DFormat::X8B8G8R8),
+                (  false,  true,  true, Some(32), Some(0x3ff00000), Some(   0xffc00), Some(     0x3ff), Some(0xc0000000)) => Some(D3DFormat::A2R10G10B10),
+                (  false,  true, false, Some(24), Some(  0xff0000), Some(    0xff00), Some(      0xff), None            ) => Some(D3DFormat::R8G8B8),
+                (  false,  true, false, Some(16), Some(    0x7c00), Some(     0x3e0), Some(      0x1f), None            ) => Some(D3DFormat::X1R5G5B5),
+                (  false,  true,  true, Some(16), Some(     0xf00), Some(      0xf0), Some(       0xf), Some(    0xf000)) => Some(D3DFormat::A4R4G4B4),
+                (  false,  true, false, Some(16), Some(     0xf00), Some(      0xf0), Some(       0xf), None            ) => Some(D3DFormat::X4R4G4B4),
+                (  false,  true,  true, Some(16), Some(      0xe0), Some(      0x1c), Some(       0x3), Some(    0xff00)) => Some(D3DFormat::A8R3G3B2),
+                (   true, false,  true, Some(16), Some(      0xff), None,             None,             Some(    0xff00)) => Some(D3DFormat::A8L8),
+                (   true, false, false, Some(16), Some(    0xffff), None,             None,             None            ) => Some(D3DFormat::L16),
+                (   true, false, false, Some( 8), Some(      0xff), None,             None,             None            ) => Some(D3DFormat::L8),
+                (   true, false,  true, Some( 8), Some(       0xf), None,             None,             Some(      0xf0)) => Some(D3DFormat::A4L4),
                 _ => None
             }
         }

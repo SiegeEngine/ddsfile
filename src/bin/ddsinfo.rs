@@ -1,9 +1,8 @@
-
 extern crate ddsfile;
 use ddsfile::*;
 
-use std::fs::File;
 use std::env;
+use std::fs::File;
 
 fn main() {
     let filename = match env::args().nth(1) {

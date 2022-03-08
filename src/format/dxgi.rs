@@ -20,7 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-use super::pixel_format::{PixelFormat, FourCC};
+use super::pixel_format::{FourCC, PixelFormat};
 use super::DataFormat;
 
 enum_from_primitive! {
@@ -154,18 +154,16 @@ impl DataFormat for DxgiFormat {
     fn get_pitch(&self, width: u32) -> Option<u32> {
         // see https://msdn.microsoft.com/en-us/library/bb943991.aspx
         match *self {
-            DxgiFormat::R8G8_B8G8_UNorm |
-            DxgiFormat::G8R8_G8B8_UNorm => {
-                return Some(((width+1)>>1) * 4);
-            },
+            DxgiFormat::R8G8_B8G8_UNorm | DxgiFormat::G8R8_G8B8_UNorm => {
+                return Some(((width + 1) >> 1) * 4);
+            }
             _ => {}
         };
 
         if let Some(bpp) = self.get_bits_per_pixel() {
             Some((width * bpp as u32 + 7) / 8)
-        }
-        else {
-            self.get_block_size().map(|bs| 1.max((width + 3)/4) * bs)
+        } else {
+            self.get_block_size().map(|bs| 1.max((width + 3) / 4) * bs)
         }
     }
 
@@ -173,105 +171,92 @@ impl DataFormat for DxgiFormat {
         match *self {
             DxgiFormat::Unknown => None,
 
-            DxgiFormat::R32G32B32A32_Typeless |
-            DxgiFormat::R32G32B32A32_Float |
-            DxgiFormat::R32G32B32A32_UInt |
-            DxgiFormat::R32G32B32A32_SInt
-                => Some(128),
+            DxgiFormat::R32G32B32A32_Typeless
+            | DxgiFormat::R32G32B32A32_Float
+            | DxgiFormat::R32G32B32A32_UInt
+            | DxgiFormat::R32G32B32A32_SInt => Some(128),
 
-            DxgiFormat::R32G32B32_Typeless |
-            DxgiFormat::R32G32B32_Float |
-            DxgiFormat::R32G32B32_UInt |
-            DxgiFormat::R32G32B32_SInt
-                => Some(96),
+            DxgiFormat::R32G32B32_Typeless
+            | DxgiFormat::R32G32B32_Float
+            | DxgiFormat::R32G32B32_UInt
+            | DxgiFormat::R32G32B32_SInt => Some(96),
 
-            DxgiFormat::R16G16B16A16_Typeless |
-            DxgiFormat::R16G16B16A16_Float |
-            DxgiFormat::R16G16B16A16_UNorm |
-            DxgiFormat::R16G16B16A16_UInt |
-            DxgiFormat::R16G16B16A16_SNorm |
-            DxgiFormat::R16G16B16A16_SInt |
-            DxgiFormat::R32G32_Typeless |
-            DxgiFormat::R32G32_Float |
-            DxgiFormat::R32G32_UInt |
-            DxgiFormat::R32G32_SInt |
-            DxgiFormat::R32G8X24_Typeless |
-            DxgiFormat::D32_Float_S8X24_UInt |
-            DxgiFormat::R32_Float_X8X24_Typeless |
-            DxgiFormat::X32_Typeless_G8X24_UInt
-                => Some(64),
+            DxgiFormat::R16G16B16A16_Typeless
+            | DxgiFormat::R16G16B16A16_Float
+            | DxgiFormat::R16G16B16A16_UNorm
+            | DxgiFormat::R16G16B16A16_UInt
+            | DxgiFormat::R16G16B16A16_SNorm
+            | DxgiFormat::R16G16B16A16_SInt
+            | DxgiFormat::R32G32_Typeless
+            | DxgiFormat::R32G32_Float
+            | DxgiFormat::R32G32_UInt
+            | DxgiFormat::R32G32_SInt
+            | DxgiFormat::R32G8X24_Typeless
+            | DxgiFormat::D32_Float_S8X24_UInt
+            | DxgiFormat::R32_Float_X8X24_Typeless
+            | DxgiFormat::X32_Typeless_G8X24_UInt => Some(64),
 
-            DxgiFormat::R10G10B10A2_Typeless |
-            DxgiFormat::R10G10B10A2_UNorm |
-            DxgiFormat::R10G10B10A2_UInt |
-            DxgiFormat::R11G11B10_Float |
-            DxgiFormat::R8G8B8A8_Typeless |
-            DxgiFormat::R8G8B8A8_UNorm |
-            DxgiFormat::R8G8B8A8_UNorm_sRGB |
-            DxgiFormat::R8G8B8A8_UInt |
-            DxgiFormat::R8G8B8A8_SNorm |
-            DxgiFormat::R8G8B8A8_SInt |
-            DxgiFormat::R16G16_Typeless |
-            DxgiFormat::R16G16_Float |
-            DxgiFormat::R16G16_UNorm |
-            DxgiFormat::R16G16_UInt |
-            DxgiFormat::R16G16_SNorm |
-            DxgiFormat::R16G16_SInt |
-            DxgiFormat::R32_Typeless |
-            DxgiFormat::D32_Float |
-            DxgiFormat::R32_Float |
-            DxgiFormat::R32_UInt |
-            DxgiFormat::R32_SInt |
-            DxgiFormat::R24G8_Typeless |
-            DxgiFormat::D24_UNorm_S8_UInt |
-            DxgiFormat::R24_UNorm_X8_Typeless |
-            DxgiFormat::X24_Typeless_G8_UInt
-                => Some(32),
+            DxgiFormat::R10G10B10A2_Typeless
+            | DxgiFormat::R10G10B10A2_UNorm
+            | DxgiFormat::R10G10B10A2_UInt
+            | DxgiFormat::R11G11B10_Float
+            | DxgiFormat::R8G8B8A8_Typeless
+            | DxgiFormat::R8G8B8A8_UNorm
+            | DxgiFormat::R8G8B8A8_UNorm_sRGB
+            | DxgiFormat::R8G8B8A8_UInt
+            | DxgiFormat::R8G8B8A8_SNorm
+            | DxgiFormat::R8G8B8A8_SInt
+            | DxgiFormat::R16G16_Typeless
+            | DxgiFormat::R16G16_Float
+            | DxgiFormat::R16G16_UNorm
+            | DxgiFormat::R16G16_UInt
+            | DxgiFormat::R16G16_SNorm
+            | DxgiFormat::R16G16_SInt
+            | DxgiFormat::R32_Typeless
+            | DxgiFormat::D32_Float
+            | DxgiFormat::R32_Float
+            | DxgiFormat::R32_UInt
+            | DxgiFormat::R32_SInt
+            | DxgiFormat::R24G8_Typeless
+            | DxgiFormat::D24_UNorm_S8_UInt
+            | DxgiFormat::R24_UNorm_X8_Typeless
+            | DxgiFormat::X24_Typeless_G8_UInt => Some(32),
 
-            DxgiFormat::R8G8_Typeless |
-            DxgiFormat::R8G8_UNorm |
-            DxgiFormat::R8G8_UInt |
-            DxgiFormat::R8G8_SNorm |
-            DxgiFormat::R8G8_SInt |
-            DxgiFormat::R16_Typeless |
-            DxgiFormat::R16_Float |
-            DxgiFormat::D16_UNorm |
-            DxgiFormat::R16_UNorm |
-            DxgiFormat::R16_UInt |
-            DxgiFormat::R16_SNorm |
-            DxgiFormat::R16_SInt
-                => Some(16),
+            DxgiFormat::R8G8_Typeless
+            | DxgiFormat::R8G8_UNorm
+            | DxgiFormat::R8G8_UInt
+            | DxgiFormat::R8G8_SNorm
+            | DxgiFormat::R8G8_SInt
+            | DxgiFormat::R16_Typeless
+            | DxgiFormat::R16_Float
+            | DxgiFormat::D16_UNorm
+            | DxgiFormat::R16_UNorm
+            | DxgiFormat::R16_UInt
+            | DxgiFormat::R16_SNorm
+            | DxgiFormat::R16_SInt => Some(16),
 
-            DxgiFormat::R8_Typeless |
-            DxgiFormat::R8_UNorm |
-            DxgiFormat::R8_UInt |
-            DxgiFormat::R8_SNorm |
-            DxgiFormat::R8_SInt |
-            DxgiFormat::A8_UNorm
-                => Some(8),
+            DxgiFormat::R8_Typeless
+            | DxgiFormat::R8_UNorm
+            | DxgiFormat::R8_UInt
+            | DxgiFormat::R8_SNorm
+            | DxgiFormat::R8_SInt
+            | DxgiFormat::A8_UNorm => Some(8),
 
-            DxgiFormat::R1_UNorm
-                => Some(1),
+            DxgiFormat::R1_UNorm => Some(1),
 
-            DxgiFormat::R9G9B9E5_SharedExp
-                => Some(32),
+            DxgiFormat::R9G9B9E5_SharedExp => Some(32),
 
-            DxgiFormat::R8G8_B8G8_UNorm |
-            DxgiFormat::G8R8_G8B8_UNorm
-                => Some(16),
+            DxgiFormat::R8G8_B8G8_UNorm | DxgiFormat::G8R8_G8B8_UNorm => Some(16),
 
-            DxgiFormat::B5G6R5_UNorm |
-            DxgiFormat::B5G5R5A1_UNorm
-                => Some(16),
+            DxgiFormat::B5G6R5_UNorm | DxgiFormat::B5G5R5A1_UNorm => Some(16),
 
-            DxgiFormat::B8G8R8A8_UNorm |
-            DxgiFormat::B8G8R8X8_UNorm |
-            DxgiFormat::R10G10B10_XR_Bias_A2_UNorm |
-            DxgiFormat::B8G8R8A8_Typeless |
-            DxgiFormat::B8G8R8A8_UNorm_sRGB |
-            DxgiFormat::B8G8R8X8_Typeless |
-            DxgiFormat::B8G8R8X8_UNorm_sRGB
-                => Some(32),
+            DxgiFormat::B8G8R8A8_UNorm
+            | DxgiFormat::B8G8R8X8_UNorm
+            | DxgiFormat::R10G10B10_XR_Bias_A2_UNorm
+            | DxgiFormat::B8G8R8A8_Typeless
+            | DxgiFormat::B8G8R8A8_UNorm_sRGB
+            | DxgiFormat::B8G8R8X8_Typeless
+            | DxgiFormat::B8G8R8X8_UNorm_sRGB => Some(32),
 
             DxgiFormat::AYUV => Some(32),
             DxgiFormat::Y410 => Some(10),
@@ -299,34 +284,28 @@ impl DataFormat for DxgiFormat {
 
     fn get_block_size(&self) -> Option<u32> {
         match *self {
-            DxgiFormat::BC1_Typeless |
-            DxgiFormat::BC1_UNorm |
-            DxgiFormat::BC1_UNorm_sRGB
-                => Some(8),
+            DxgiFormat::BC1_Typeless | DxgiFormat::BC1_UNorm | DxgiFormat::BC1_UNorm_sRGB => {
+                Some(8)
+            }
 
-            DxgiFormat::BC2_Typeless |
-            DxgiFormat::BC2_UNorm |
-            DxgiFormat::BC2_UNorm_sRGB |
-            DxgiFormat::BC3_Typeless |
-            DxgiFormat::BC3_UNorm |
-            DxgiFormat::BC3_UNorm_sRGB
-                => Some(16),
+            DxgiFormat::BC2_Typeless
+            | DxgiFormat::BC2_UNorm
+            | DxgiFormat::BC2_UNorm_sRGB
+            | DxgiFormat::BC3_Typeless
+            | DxgiFormat::BC3_UNorm
+            | DxgiFormat::BC3_UNorm_sRGB => Some(16),
 
-            DxgiFormat::BC4_Typeless |
-            DxgiFormat::BC4_UNorm |
-            DxgiFormat::BC4_SNorm
-                => Some(8),
+            DxgiFormat::BC4_Typeless | DxgiFormat::BC4_UNorm | DxgiFormat::BC4_SNorm => Some(8),
 
-            DxgiFormat::BC5_Typeless |
-            DxgiFormat::BC5_UNorm |
-            DxgiFormat::BC5_SNorm |
-            DxgiFormat::BC6H_Typeless |
-            DxgiFormat::BC6H_UF16 |
-            DxgiFormat::BC6H_SF16 |
-            DxgiFormat::BC7_Typeless |
-            DxgiFormat::BC7_UNorm |
-            DxgiFormat::BC7_UNorm_sRGB
-                => Some(16),
+            DxgiFormat::BC5_Typeless
+            | DxgiFormat::BC5_UNorm
+            | DxgiFormat::BC5_SNorm
+            | DxgiFormat::BC6H_Typeless
+            | DxgiFormat::BC6H_UF16
+            | DxgiFormat::BC6H_SF16
+            | DxgiFormat::BC7_Typeless
+            | DxgiFormat::BC7_UNorm
+            | DxgiFormat::BC7_UNorm_sRGB => Some(16),
 
             _ => None,
         }
@@ -343,7 +322,7 @@ impl DataFormat for DxgiFormat {
             DxgiFormat::BC4_UNorm => Some(FourCC(FourCC::BC4_UNORM)),
             DxgiFormat::BC4_SNorm => Some(FourCC(FourCC::BC4_SNORM)),
             DxgiFormat::BC5_UNorm => Some(FourCC(FourCC::BC5_UNORM)),
-            DxgiFormat::BC5_SNorm  => Some(FourCC(FourCC::BC5_SNORM)),
+            DxgiFormat::BC5_SNorm => Some(FourCC(FourCC::BC5_SNORM)),
             DxgiFormat::R8G8_B8G8_UNorm => Some(FourCC(FourCC::R8G8_B8G8_UNORM)),
             DxgiFormat::G8R8_G8B8_UNorm => Some(FourCC(FourCC::G8R8_G8B8_UNORM)),
             DxgiFormat::R16G16B16A16_UNorm => Some(FourCC(FourCC::R16G16B16A16_UNORM)),
@@ -354,7 +333,7 @@ impl DataFormat for DxgiFormat {
             DxgiFormat::R32_Float => Some(FourCC(FourCC::R32_FLOAT)),
             DxgiFormat::R32G32_Float => Some(FourCC(FourCC::R32G32_FLOAT)),
             DxgiFormat::R32G32B32A32_Float => Some(FourCC(FourCC::R32G32B32A32_FLOAT)),
-            _ => None
+            _ => None,
         }
     }
 
@@ -434,8 +413,7 @@ impl DataFormat for DxgiFormat {
 }
 
 impl DxgiFormat {
-    pub fn try_from_pixel_format(pixel_format: &PixelFormat) -> Option<DxgiFormat>
-    {
+    pub fn try_from_pixel_format(pixel_format: &PixelFormat) -> Option<DxgiFormat> {
         if let Some(ref fourcc) = pixel_format.fourcc {
             match fourcc.0 {
                 FourCC::DXT1 => Some(DxgiFormat::BC1_UNorm_sRGB),

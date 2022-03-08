@@ -21,11 +21,11 @@
 // THE SOFTWARE.
 
 use crate::error::*;
-use std::io::{Read, Write};
-use std::fmt;
+use crate::format::DxgiFormat;
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 use enum_primitive::FromPrimitive;
-use crate::format::DxgiFormat;
+use std::fmt;
+use std::io::{Read, Write};
 
 enum_from_primitive! {
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -73,12 +73,13 @@ impl Default for Header10 {
 }
 
 impl Header10 {
-    pub fn new(format: DxgiFormat, is_cubemap: bool,
-               resource_dimension: D3D10ResourceDimension,
-               array_size: u32,
-               alpha_mode: AlphaMode)
-               -> Header10
-    {
+    pub fn new(
+        format: DxgiFormat,
+        is_cubemap: bool,
+        resource_dimension: D3D10ResourceDimension,
+        array_size: u32,
+        alpha_mode: AlphaMode,
+    ) -> Header10 {
         let mut flags = MiscFlag::empty();
         if is_cubemap {
             flags |= MiscFlag::TEXTURECUBE
@@ -92,29 +93,21 @@ impl Header10 {
         }
     }
 
-    pub fn read<R: Read>(mut r: R) -> Result<Header10, Error>
-    {
+    pub fn read<R: Read>(mut r: R) -> Result<Header10, Error> {
         let dxgi_format = r.read_u32::<LittleEndian>()?;
         let resource_dimension = r.read_u32::<LittleEndian>()?;
-        let misc_flag = MiscFlag::from_bits_truncate(
-            r.read_u32::<LittleEndian>()?
-        );
+        let misc_flag = MiscFlag::from_bits_truncate(r.read_u32::<LittleEndian>()?);
         let array_size = r.read_u32::<LittleEndian>()?;
         let alpha_mode = r.read_u32::<LittleEndian>()?;
 
-        let dxgi_format_result: Result<DxgiFormat, Error> =
-            DxgiFormat::from_u32(dxgi_format).ok_or_else(
-                || Error::InvalidField("dxgi_format".to_owned())
-            );
+        let dxgi_format_result: Result<DxgiFormat, Error> = DxgiFormat::from_u32(dxgi_format)
+            .ok_or_else(|| Error::InvalidField("dxgi_format".to_owned()));
         let resource_dimension_result: Result<D3D10ResourceDimension, Error> =
-            D3D10ResourceDimension::from_u32(resource_dimension).ok_or_else(
-                || Error::InvalidField("resource_dimension".to_owned())
-            );
+            D3D10ResourceDimension::from_u32(resource_dimension)
+                .ok_or_else(|| Error::InvalidField("resource_dimension".to_owned()));
 
-        let alpha_mode: Result<AlphaMode, Error> =
-            AlphaMode::from_u32(alpha_mode).ok_or_else(
-                || Error::InvalidField("alpha mode (misc_flags2)".to_owned())
-            );
+        let alpha_mode: Result<AlphaMode, Error> = AlphaMode::from_u32(alpha_mode)
+            .ok_or_else(|| Error::InvalidField("alpha mode (misc_flags2)".to_owned()));
 
         Ok(Header10 {
             dxgi_format: dxgi_format_result?,
@@ -125,8 +118,7 @@ impl Header10 {
         })
     }
 
-    pub fn write<W: Write>(&self, w: &mut W) -> Result<(), Error>
-    {
+    pub fn write<W: Write>(&self, w: &mut W) -> Result<(), Error> {
         w.write_u32::<LittleEndian>(self.dxgi_format as u32)?;
         w.write_u32::<LittleEndian>(self.resource_dimension as u32)?;
         w.write_u32::<LittleEndian>(self.misc_flag.bits())?;

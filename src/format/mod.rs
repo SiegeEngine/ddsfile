@@ -21,7 +21,7 @@
 // THE SOFTWARE.
 
 mod pixel_format;
-pub use self::pixel_format::{PixelFormat, PixelFormatFlags, FourCC};
+pub use self::pixel_format::{FourCC, PixelFormat, PixelFormatFlags};
 
 mod d3d;
 pub use self::d3d::D3DFormat;

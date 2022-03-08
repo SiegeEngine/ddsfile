@@ -20,11 +20,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+use super::{D3DFormat, DataFormat, DxgiFormat};
 use crate::error::*;
-use std::io::{Read, Write};
-use std::fmt;
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
-use super::{D3DFormat, DxgiFormat, DataFormat};
+use std::fmt;
+use std::io::{Read, Write};
 
 #[derive(Clone)]
 pub struct PixelFormat {
@@ -59,15 +59,12 @@ pub struct PixelFormat {
 }
 
 impl PixelFormat {
-    pub fn read<R: Read>(mut r: R) -> Result<PixelFormat, Error>
-    {
+    pub fn read<R: Read>(mut r: R) -> Result<PixelFormat, Error> {
         let size = r.read_u32::<LittleEndian>()?;
         if size != 32 {
             return Err(Error::InvalidField("Pixel format struct size".to_owned()));
         }
-        let flags = PixelFormatFlags::from_bits_truncate(
-            r.read_u32::<LittleEndian>()?
-        );
+        let flags = PixelFormatFlags::from_bits_truncate(r.read_u32::<LittleEndian>()?);
         let fourcc = r.read_u32::<LittleEndian>()?;
         let rgb_bit_count = r.read_u32::<LittleEndian>()?;
         let r_bit_mask = r.read_u32::<LittleEndian>()?;
@@ -110,12 +107,11 @@ impl PixelFormat {
                 Some(a_bit_mask)
             } else {
                 None
-            }
+            },
         })
     }
 
-    pub fn write<W: Write>(&self, w: &mut W) -> Result<(), Error>
-    {
+    pub fn write<W: Write>(&self, w: &mut W) -> Result<(), Error> {
         w.write_u32::<LittleEndian>(self.size)?;
         w.write_u32::<LittleEndian>(self.flags.bits())?;
         w.write_u32::<LittleEndian>(self.fourcc.as_ref().unwrap_or(&FourCC(0)).0)?;
@@ -134,8 +130,11 @@ impl fmt::Debug for PixelFormat {
         writeln!(f, "      flags: {:?}", self.flags)?;
         writeln!(f, "      fourcc: {:?}", self.fourcc)?;
         writeln!(f, "      bits_per_pixel: {:?}", self.rgb_bit_count)?;
-        writeln!(f, "      RGBA bitmasks: {:?}, {:?}, {:?}, {:?}",
-                 self.r_bit_mask, self.g_bit_mask, self.b_bit_mask, self.a_bit_mask)?;
+        writeln!(
+            f,
+            "      RGBA bitmasks: {:?}, {:?}, {:?}, {:?}",
+            self.r_bit_mask, self.g_bit_mask, self.b_bit_mask, self.a_bit_mask
+        )?;
         Ok(())
     }
 }
@@ -156,14 +155,12 @@ impl Default for PixelFormat {
 }
 
 impl From<D3DFormat> for PixelFormat {
-    fn from(format: D3DFormat) -> PixelFormat
-    {
+    fn from(format: D3DFormat) -> PixelFormat {
         let mut pf: PixelFormat = Default::default();
         if let Some(bpp) = format.get_bits_per_pixel() {
             pf.flags.insert(PixelFormatFlags::RGB);
             pf.rgb_bit_count = Some(bpp as u32)
-        }
-        else if let Some(fourcc) = format.get_fourcc() {
+        } else if let Some(fourcc) = format.get_fourcc() {
             pf.flags.insert(PixelFormatFlags::FOURCC);
             pf.fourcc = Some(fourcc);
         }
@@ -179,8 +176,7 @@ impl From<D3DFormat> for PixelFormat {
 }
 
 impl From<DxgiFormat> for PixelFormat {
-    fn from(format: DxgiFormat) -> PixelFormat
-    {
+    fn from(format: DxgiFormat) -> PixelFormat {
         let mut pf: PixelFormat = Default::default();
         if let Some(bpp) = format.get_bits_per_pixel() {
             pf.flags.insert(PixelFormatFlags::RGB); // means uncompressed
@@ -240,7 +236,7 @@ impl FourCC {
     pub const DXT4: u32 = 0x34545844; //u32_code!(b"DXT4");
     pub const DXT5: u32 = 0x35545844; //u32_code!(b"DXT5");
     pub const R8G8_B8G8: u32 = 0x47424752; //u32_code!(b"RGBG");
-    pub const G8R8_G8B8: u32 = 0x42475247;//u32_code!(b"GRGB");
+    pub const G8R8_G8B8: u32 = 0x42475247; //u32_code!(b"GRGB");
     pub const A16B16G16R16: u32 = 36;
     pub const Q16W16V16U16: u32 = 110;
     pub const R16F: u32 = 111;
