@@ -314,6 +314,8 @@ impl Dds {
     pub fn get_num_array_layers(&self) -> u32 {
         if let Some(ref h10) = self.header10 {
             h10.array_size
+        } else if self.header.caps2.contains(Caps2::CUBEMAP) {
+            6
         } else {
             1 // just the 1 layer
         }
