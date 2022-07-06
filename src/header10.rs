@@ -23,19 +23,18 @@
 use crate::error::*;
 use crate::format::DxgiFormat;
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
-use enum_primitive::FromPrimitive;
+use enum_primitive_derive::Primitive;
+use num_traits::FromPrimitive;
 use std::fmt;
 use std::io::{Read, Write};
 
-enum_from_primitive! {
-    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-    pub enum D3D10ResourceDimension {
-        Unknown = 0,
-        Buffer = 1,
-        Texture1D = 2,
-        Texture2D = 3,
-        Texture3D = 4,
-    }
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Primitive)]
+pub enum D3D10ResourceDimension {
+    Unknown = 0,
+    Buffer = 1,
+    Texture1D = 2,
+    Texture2D = 3,
+    Texture3D = 4,
 }
 
 #[derive(Clone)]
@@ -135,14 +134,12 @@ bitflags! {
     }
 }
 
-enum_from_primitive! {
-    #[allow(non_camel_case_types)]
-    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-    pub enum AlphaMode {
-        Unknown = 0x0,
-        Straight = 0x1,
-        PreMultiplied = 0x2,
-        Opaque = 0x3,
-        Custom = 0x4,
-    }
+#[allow(non_camel_case_types)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Primitive)]
+pub enum AlphaMode {
+    Unknown = 0x0,
+    Straight = 0x1,
+    PreMultiplied = 0x2,
+    Opaque = 0x3,
+    Custom = 0x4,
 }
