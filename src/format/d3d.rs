@@ -315,7 +315,8 @@ impl D3DFormat {
             let alpha = pixel_format.flags.contains(PixelFormatFlags::ALPHA)
                 || pixel_format.flags.contains(PixelFormatFlags::ALPHA_PIXELS);
             let lum = pixel_format.flags.contains(PixelFormatFlags::LUMINANCE);
-            match (
+            #[rustfmt::skip]
+            let format = match (
                 lum,
                 rgb,
                 alpha,
@@ -325,8 +326,6 @@ impl D3DFormat {
                 pixel_format.b_bit_mask,
                 pixel_format.a_bit_mask
             ) {
-                // NOTE: The following block is intentionally not formatted according to rustfmt standards.
-                //       Please keep it this way as this is much easier to read.
                 // lum     rgb   alpha  rgb cnt         r bitmask         g bitmask         b bitmask         a bitmask
                 (  false,  true,  true, Some(32), Some(      0xff), Some(    0xff00), Some(  0xff0000), Some(0xff000000)) => Some(D3DFormat::A8B8G8R8),
                 (  false,  true, false, Some(32), Some(    0xffff), Some(0xffff0000), None,             None            ) => Some(D3DFormat::G16R16),
@@ -348,7 +347,8 @@ impl D3DFormat {
                 (   true, false, false, Some( 8), Some(      0xff), None,             None,             None            ) => Some(D3DFormat::L8),
                 (   true, false,  true, Some( 8), Some(       0xf), None,             None,             Some(      0xf0)) => Some(D3DFormat::A4L4),
                 _ => None
-            }
+            };
+            format
         }
     }
 }
