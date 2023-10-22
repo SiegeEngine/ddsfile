@@ -377,5 +377,12 @@ bitflags! {
         const CUBEMAP_NEGATIVEZ = 0x8000;
         /// Required for a volume texture
         const VOLUME = 0x200000;
+        /// Identical to setting all cubemap direction flags
+        const CUBEMAP_ALLFACES = Self::CUBEMAP_POSITIVEX.bits()
+            | Self::CUBEMAP_NEGATIVEX.bits()
+            | Self::CUBEMAP_POSITIVEY.bits()
+            | Self::CUBEMAP_NEGATIVEY.bits()
+            | Self::CUBEMAP_POSITIVEZ.bits()
+            | Self::CUBEMAP_NEGATIVEZ.bits();
     }
 }

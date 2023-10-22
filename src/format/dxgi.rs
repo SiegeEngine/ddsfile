@@ -20,10 +20,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-use enum_primitive_derive::Primitive;
 use super::pixel_format::{FourCC, PixelFormat};
 use super::DataFormat;
+use enum_primitive_derive::Primitive;
 
+#[rustfmt::skip]
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Primitive)]
 #[repr(u32)]
@@ -149,7 +150,6 @@ pub enum DxgiFormat {
     V408                        = 132,
     Force_UInt                  = 0xffffffff_u32
 }
-
 
 impl DataFormat for DxgiFormat {
     fn get_pitch(&self, width: u32) -> Option<u32> {
