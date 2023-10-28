@@ -128,6 +128,7 @@ impl Header10 {
 }
 
 bitflags! {
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     pub struct MiscFlag: u32 {
         /// 2D Texture is a cube-map texture
         const TEXTURECUBE = 0x4;

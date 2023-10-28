@@ -193,6 +193,7 @@ impl From<DxgiFormat> for PixelFormat {
 }
 
 bitflags! {
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     pub struct PixelFormatFlags: u32 {
         /// Texture contains alpha data.
         const ALPHA_PIXELS = 0x1;

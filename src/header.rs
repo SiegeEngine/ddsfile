@@ -327,6 +327,7 @@ impl fmt::Debug for Header {
 }
 
 bitflags! {
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     pub struct HeaderFlags: u32 {
         /// Required in every DDS file
         const CAPS = 0x1;
@@ -348,6 +349,7 @@ bitflags! {
 }
 
 bitflags! {
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     pub struct Caps: u32 {
         /// Optional; Must be used on any file that contains more than one surface
         /// (a mipmap, a cubic environment, or a mipmapped volume texture)
@@ -360,6 +362,7 @@ bitflags! {
 }
 
 bitflags! {
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     pub struct Caps2: u32 {
         /// Required for a cube map
         const CUBEMAP = 0x200;
