@@ -8,7 +8,7 @@ documentation = "https://docs.rs/ddsfile"
 license = "MIT"
 keywords = [ "dds" ]
 readme = "README.md"
-edition = "2018"
+edition = "2021"
 
 [dependencies]
 bitflags = "2.4"
