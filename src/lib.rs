@@ -45,6 +45,7 @@ use std::fmt;
 use std::io::{Read, Write};
 
 /// This is the main DirectDraw Surface file structure
+#[derive(Clone)]
 pub struct Dds {
     // magic is implicit
     pub header: Header,
