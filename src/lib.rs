@@ -54,6 +54,7 @@ pub struct Dds {
 }
 
 /// Parameters for Dds::new_d3d()
+#[derive(Debug, Clone)]
 pub struct NewD3dParams {
     pub height: u32,
     pub width: u32,
@@ -64,6 +65,7 @@ pub struct NewD3dParams {
 }
 
 /// Parameters for Dds::new_dxgi()
+#[derive(Debug, Clone)]
 pub struct NewDxgiParams {
     pub height: u32,
     pub width: u32,
