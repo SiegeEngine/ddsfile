@@ -386,13 +386,13 @@ fn get_texture_size(
 ) -> Option<u32> {
     let depth = depth.unwrap_or(1);
 
-    if let Some(ls) = linear_size {
-        Some(ls)
-    } else if let Some(pitch) = pitch {
+    // Prefer the size computed from the pitch: many writers store a wrong
+    // dwPitchOrLinearSize, so the header value is only a fallback.
+    if let Some(pitch) = pitch {
         let row_height = (height + (pitch_height - 1)) / pitch_height;
         Some(pitch * row_height * depth)
     } else {
-        None
+        linear_size
     }
 }
 
@@ -427,5 +427,29 @@ impl fmt::Debug for Dds {
         }
         writeln!(f, "  (data elided)")?;
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod size_tests {
+    use super::*;
+
+    #[test]
+    fn wrong_linear_size_in_header_is_ignored() {
+        let mut dds = Dds::new_d3d(NewD3dParams {
+            height: 64,
+            width: 64,
+            depth: None,
+            format: D3DFormat::DXT1,
+            mipmap_levels: None,
+            caps2: None,
+        })
+        .unwrap();
+        // 16 x 16 blocks of 8 bytes.
+        assert_eq!(dds.get_data(0).unwrap().len(), 2048);
+        // Some writers put a wrong value into dwPitchOrLinearSize.
+        dds.header.linear_size = Some(256);
+        assert_eq!(dds.get_main_texture_size(), Some(2048));
+        assert_eq!(dds.get_data(0).unwrap().len(), 2048);
     }
 }
